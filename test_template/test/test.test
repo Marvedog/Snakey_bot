@@ -1,0 +1,7 @@
+<launch>
+
+	<node pkg="test_template" type="pub" name="pub" output="screen"/>
+
+	<test time-limit="60" test-name="template_test" pkg="test_template" type="template_test" />
+
+</launch>
