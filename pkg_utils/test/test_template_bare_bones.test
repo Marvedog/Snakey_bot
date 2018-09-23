@@ -1,0 +1,9 @@
+<launch>
+
+	<rosparam command="load" file="$(find pkg_utils)/params/test_template_params.yaml" />
+	<group ns='test'>
+		<node pkg="pkg_utils" type="test_pub" name="test_pub" output="screen" />
+	</group>
+
+	<test time-limit="60" test-name="bare_bones_test" pkg="pkg_utils" type="bare_bones_test" />
+</launch>

@@ -1,0 +1,6 @@
+test/number_of_runs: 50
+test/log_file_base: 'testing_template_bare_bones'
+test/floating_tol: 0.00000001
+test/delay: 3.0
+test/refresh_rate: 0.05
+test/max_latency: 0.11
