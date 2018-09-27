@@ -96,6 +96,20 @@ catkin_add_gtest(eigen_helpers_test src/eigen_helpers.cpp test/eigen_helpers_tes
 target_link_libraries(eigen_helpers_test ${catkin_LIBRARIES})
 add_dependencies(eigen_helpers_test ${catkin_EXPORTED_TARGETS})
 	
+# Test for transformations library
+catkin_add_gtest(
+	transformations_test 
+	test/transformations_test.cpp
+	include/pkg_utils/transformations.h 
+)
+target_link_libraries(
+	transformations_test 
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	transformations_test 
+	${catkin_EXPORTED_TARGETS}
+)
 
 # Test for spline library
 catkin_add_gtest(
