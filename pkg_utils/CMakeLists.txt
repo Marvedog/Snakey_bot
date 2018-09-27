@@ -32,7 +32,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES test_base test_statistics
+  LIBRARIES testing_statistics helper_functions spline
 )
 
 include_directories(
@@ -43,6 +43,29 @@ include_directories(
 	include
   /usr/include/eigen3
 	/usr/include/gtest
+)
+
+# Helper function library
+add_library(
+	helper_functions 
+	src/helper_functions.cpp 
+	include/pkg_utils/helper_functions.h)
+
+# Create spline library	
+add_library(
+	spline 
+	src/spline.cpp 
+	src/eigen_helpers.cpp 
+	src/helper_functions.cpp 
+	include/pkg_utils/spline.h 
+)
+target_link_libraries(
+		spline 
+		${catkin_LIBRARIES}
+)
+add_dependencies(
+		spline 
+		${catkin_EXPORTED_TARGETS}
 )
 
 # Create statistics library for testing
@@ -68,7 +91,29 @@ target_link_libraries(
 	${catkin_LIBRARIES}
 )
 
+# Test for eigen library
+catkin_add_gtest(eigen_helpers_test src/eigen_helpers.cpp test/eigen_helpers_test.cpp)
+target_link_libraries(eigen_helpers_test ${catkin_LIBRARIES})
+add_dependencies(eigen_helpers_test ${catkin_EXPORTED_TARGETS})
 	
+
+# Test for spline library
+catkin_add_gtest(
+	spline_test 
+	src/eigen_helpers.cpp 
+	src/helper_functions.cpp 
+	src/spline.cpp 
+	test/spline_test.cpp
+)
+target_link_libraries(
+	spline_test 
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	spline_test 
+	${catkin_EXPORTED_TARGETS}
+)
+
 if (CATKIN_ENABLE_TESTING)
 	find_package(rostest REQUIRED)
 	if(TARGET tests)
@@ -84,7 +129,10 @@ if (CATKIN_ENABLE_TESTING)
 			${GTEST_LIBRARIES}
 			testing_statistics
 		)
-		add_dependencies(tests bare_bones_test)
+		add_dependencies(
+			tests 
+			bare_bones_test
+		)
 	endif()
 
 	set(LOCAL_DEPENDENCIES
