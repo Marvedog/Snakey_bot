@@ -2,7 +2,7 @@
 #define WLOS_GUIDANCE
 
 #include <ros/ros.h>
-#include <ros/Time.h>
+#include <ros/time.h>
 
 /* Inputs */
 #include <nav_msgs/Odometry.h>
@@ -11,7 +11,7 @@
 /* Waypoint LOS guiance utils */
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-#include <pkg_utils/Trajectory.h>
+#include <pkg_utils/trajectory.h>
 
 /* Outputs */
 
@@ -33,10 +33,12 @@ class WlosGuidance
 
 		ros::Publisher desired_velocity_;
 		ros::Publisher desired_end_effector_pose_;
+		
+		double rate_;
 	private:
 
 		/* Callbacks */
-		void trajectoryCb(const r18dv_msgs::Trajectory::ConstPtr trajectory_msg);
+		void trajectoryCb(const snake_msgs::Trajectory::ConstPtr trajectory_msg);
 		void odomCb(const nav_msgs::Odometry::ConstPtr odom);
 
 		/* Utilities */
@@ -52,13 +54,13 @@ class WlosGuidance
 
 		/* Input */
 		nav_msgs::Odometry odometry_;	
-		Trajectory trajectory_;
+		utils::Trajectory trajectory_;
 
 		/* trajectoryCb containers */
 		ros::Time time_traj_input_;
 		
 		/* odomCb containers */
-		Eigen::Quaternion base_frame_quat_; 
+		Eigen::Quaterniond base_frame_quat_; 
 		ros::Time time_odom_input_;
 
 		/* progressPath containers */
@@ -74,13 +76,14 @@ class WlosGuidance
 		double x_angle_;
 		double y_angle_;
 		double z_angle_;
-		Eigen::MatrixXf los_frame_;
-		Eigen::MatrixXf base_frame_;
-		Eigen::MatrixXf orientation_error_;
-
+		Eigen::MatrixXd los_frame_;
+		Eigen::MatrixXd base_frame_;
+		Eigen::MatrixXd orientation_error_;
+		Eigen::Quaterniond los_frame_quat_; 
+		Eigen::Quaterniond orientation_error_quat_; 
+		
 		/* Tuning parameters */
 		double PI;
-		double rate_;
 		double min_lookahead_;
 		double max_lookahead_;
 		int joints_;

@@ -1,4 +1,4 @@
-#include "control_systems/wlos_guidance.h"
+#include "control_system/wlos_guidance.h"
 #include "pkg_utils/helper_functions.h"
 #include "pkg_utils/conversions.h"
 
@@ -11,10 +11,10 @@
 */
 
 WlosGuidance::WlosGuidance()
-: rate(50)
+: rate_(50)
 {
 	bool read_success = true;
-	std::string package_name = control_systems;
+	std::string package_name = "control_system";
 	
 	/* Read parameters */
 	if (!helper_functions::getRosParamAndPrintRosWarningIfFail("min_lookahead"
@@ -51,7 +51,7 @@ WlosGuidance::WlosGuidance()
 
 	/* Initialize publishers */
 	desired_velocity_ = nh_.advertise<nav_msgs::Odometry>("base_velocity", 5);
-	desired_end_effector_velocity_ = nh_.advertise<nav_msgs::Odometry>("base_velocity", 5);
+	desired_end_effector_pose_ = nh_.advertise<nav_msgs::Odometry>("base_velocity", 5);
 
 	/* Container pre-allocation ::trajectoryCb */
 	time_traj_input_ = ros::Time::now();			
@@ -62,31 +62,22 @@ WlosGuidance::WlosGuidance()
 	/* Container pre-allocation ::progressPath */
 	t_progress_ = 0;
 	
-	pose_progress_ = VectorXf::Zero(3);
-	pose_progress_.setZeros(3);
+	pose_progress_ = Eigen::VectorXd::Zero(3);
 
 	/* Container pre-allocation ::losVector */
 	double lookahead_waypoint_ = 0;
 	
-	pos_lookahead_ = VectorXf::Zero(3);
-	pos_lookahead_.setZeros(3);
-	
-	vlos_ = VectorXf::Zero(3);
-	vlos_.setZeros(3);
+	pos_lookahead_ = Eigen::VectorXd::Zero(3);
+	vlos_ = Eigen::VectorXd::Zero(3);
 
 	/* Container pre-allocation ::computeVelocityReference */
 	x_angle_ = 0;
 	y_angle_ = 0;
 	z_angle_ = 0;
 	
-	los_frame_ = VectorXf::Zero(3);
-	los_frame_.setZeros(3);
-	
-	base_frame_ = VectorXf::Zero(3);
-	base_frame_.setZeros(3);
-	
-	orientation_error_ = VectorXf::Zero(3);
-	orientation_error_.setZeros(3);
+	los_frame_ = Eigen::MatrixXd::Identity(3,3);
+	base_frame_ = Eigen::MatrixXd::Identity(3,3);
+	orientation_error_ = Eigen::MatrixXd::Identity(3,3);
 }
 
 /* Callback for trajectory 
@@ -108,10 +99,10 @@ WlosGuidance::odomCb(const nav_msgs::Odometry::ConstPtr odom_msg)
 	odometry_ = *odom_msg;
 	
 	/* Store orientation as euler angles */
-	base_frame_quat_ = Eigen::Quaternion(odometry_.pose.pose.orientation.w
-																			,odometry_.pose.pose.orientation.x
-																			,odometry_.pose.pose.orientation.y
-																			,odometry_.pose.pose.orientation.z);
+	base_frame_quat_ = Eigen::Quaterniond(odometry_.pose.pose.orientation.w
+																			 ,odometry_.pose.pose.orientation.x
+																			 ,odometry_.pose.pose.orientation.y
+																			 ,odometry_.pose.pose.orientation.z);
 
 	/* Timing */
 	time_odom_input_ = ros::Time::now();
@@ -137,7 +128,7 @@ WlosGuidance::losVector()
 	pos_lookahead_ = trajectory_.path.evaluate(lookahead_waypoint_, 0);	
 
 	/* los vector */
-	vlos = pos_lookahead_ - pose_progress_;
+	vlos_ = pos_lookahead_ - pose_progress_;
 }
 
 /* Compute references 
@@ -152,15 +143,16 @@ void
 WlosGuidance::computeVelocityReference()
 {
 	/* Orientation los frame */
-	x_angle_ = acos(vlos[0]/vlos.norm());
-	y_angle_ = acos(vlos[1]/vlos.norm());
-	z_angle_ = acos(vlos[2]/vlos.norm());
+	x_angle_ = acos(vlos_[0]/vlos_.norm());
+	y_angle_ = acos(vlos_[1]/vlos_.norm());
+	z_angle_ = acos(vlos_[2]/vlos_.norm());
 
-	los_frame_ = AngleAxisf(x_angle_*PI, Vector3f::UnitX())
-						  *AngleAxisf(y_angle_*PI, Vector3f::UnitY())
-						  *AngleAxisf(z_angle_*PI, Vector3f::UnitZ());
+	los_frame_quat_ = Eigen::AngleAxisd(x_angle_*PI, Eigen::Vector3d::UnitX())
+						  		 *Eigen::AngleAxisd(y_angle_*PI, Eigen::Vector3d::UnitY())
+						  		 *Eigen::AngleAxisd(z_angle_*PI, Eigen::Vector3d::UnitZ());
 	
-	/* Oritentation base frame */
+	/* Oritentation rotation matrices */
+	los_frame_ = los_frame_quat_.toRotationMatrix();
 	base_frame_ = base_frame_quat_.toRotationMatrix();
 
 	/* Find orientation error */
@@ -173,7 +165,7 @@ WlosGuidance::computeVelocityReference()
 void
 WlosGuidance::computeTailReference()
 {
-	if (joints > 1)
+	if (joints_ > 1)
 	{
 
 	}	

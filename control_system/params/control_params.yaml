@@ -1,0 +1,4 @@
+# Waypoint los guidance
+control/min_lookahead: 0.2
+control/max_lookahead: 0.4
+control/joints: 1
