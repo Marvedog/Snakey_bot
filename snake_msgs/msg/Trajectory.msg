@@ -1,5 +1,5 @@
 Header header
 std_msgs/Time start
 
-r18dv_msgs/Spline path
-r18dv_msgs/Spline speed
+snake_msgs/Spline path
+snake_msgs/Spline speed

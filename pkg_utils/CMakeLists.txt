@@ -7,6 +7,7 @@ set(Eigen3_DIR /usr/lib/cmake/eigen3)
 set(GTEST_DIR /usr/src/gtest/cmake)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  Eigen3
 	std_msgs
 	message_generation
 	rostest
@@ -32,7 +33,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES testing_statistics helper_functions spline
+  LIBRARIES testing_statistics helper_functions spline trajectory
 )
 
 include_directories(
@@ -49,7 +50,8 @@ include_directories(
 add_library(
 	helper_functions 
 	src/helper_functions.cpp 
-	include/pkg_utils/helper_functions.h)
+	include/pkg_utils/helper_functions.h
+)
 
 # Create spline library	
 add_library(
@@ -69,7 +71,11 @@ add_dependencies(
 )
 
 # Create statistics library for testing
-add_library(testing_statistics src/testing_statistics.cpp include/pkg_utils/testing_statistics.h)
+add_library(
+	testing_statistics 
+	src/testing_statistics.cpp 
+	include/pkg_utils/testing_statistics.h
+)
 target_link_libraries(
 	testing_statistics
 	${catkin_LIBRARIES}
@@ -77,6 +83,22 @@ target_link_libraries(
 
 add_dependencies(
 	testing_statistics	
+	${catkin_EXPORTED_TARGETS}
+)
+
+# Create trajectory library
+add_library(
+	trajectory
+	src/trajectory.cpp 
+	include/pkg_utils/trajectory.h
+)
+target_link_libraries(
+	trajectory
+	${catkin_LIBRARIES}
+)
+
+add_dependencies(
+	trajectory	
 	${catkin_EXPORTED_TARGETS}
 )
 

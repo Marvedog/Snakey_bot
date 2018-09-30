@@ -3,7 +3,7 @@
 
 namespace utils
 {
-
+	
 	/* 
 		 3d rotation round i-axis
 		 ---> Input
@@ -34,4 +34,12 @@ namespace utils
 																											  sin(rot_z),  cos(rot_z), 0,
 																											           0,           0, 1;
 	}
+
+
+	template <typename Derived> void
+	attutude_error(const Eigen::MatrixXd& R_1, const Eigen::Matrix& R_2, Eigen::MatrixBase<Derived> const &out)
+	{
+		const< Eigen::MatrixBase<Derived>& > (out).noalias() = R_1*R_2.transpose();
+	}
+
 }

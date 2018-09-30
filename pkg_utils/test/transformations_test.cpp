@@ -184,6 +184,25 @@ TEST(TransformationsTest, Rot_z)
 	ASSERT_TRUE(out_5.isApprox(rot_5, TOL));
 }
 
+TEST(TransformationsTest, Rot_x) 
+{
+	double TOL = 0.00001;	
+
+	/* Rotation pi/2 */	
+	Eigen::MatrixXd rot_1(3,3);
+	R_1   << 1, 0,  0,
+					 0, 0, -1, 
+				   0, 1,  0;	 
+	/* Rotation 3pi/4 */
+	Eigen::MatrixXd rot_2(3,3);
+	R_2 	<< 1, 				0,          0,
+	  			 0, -0.707107,  -0.707107, 
+				   0,  0.707107,  -0.707107;	 
+	
+	double x_1 = M_PI/2;
+	double x_2 = 3*M_PI/4;
+}
+
 int 
 main(int argc, char **argv)
 {
