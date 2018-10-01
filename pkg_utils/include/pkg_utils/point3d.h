@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-namespace Utils
+namespace utils
 {
 	class Point3d
 	{
@@ -31,6 +31,7 @@ namespace Utils
 
 			double x;
 			double y;
+			double z;
 	};
 } /* end namespace Utils */
 

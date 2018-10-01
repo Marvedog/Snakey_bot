@@ -15,6 +15,8 @@
 #include <pkg_utils/track.h>
 #include <pkg_utils/trajectory.h>
 
+#include <ros/console.h>
+
 namespace utils
 {
 	inline void
@@ -103,14 +105,15 @@ namespace utils
 		 ------> pts: A Eigen matrix of dimensions 3xN. Provided for efficient storage of points from message
 	*/
 	inline void 
-	waypointsMsgToPointMatrix(const snake_msgs::Waypoints &wps, Eigen::MatrixXd &pts)
+	waypointsMsgToPointMatrix(const snake_msgs::Waypoints::ConstPtr wps, Eigen::MatrixXd &pts)
 	{
 		int i = 0;
-		for (auto& wp: wps.waypoints)
+		for (auto& wp: wps->waypoints)
 		{
-			pts(i,0) = wp.x;
-			pts(i,1) = wp.y;
-			pts(i,2) = wp.z;
+			ROS_INFO_STREAM("waypointMsgToPointMatrix:: i = " << i);
+			pts(0,i) = wp.x;
+			pts(1,i) = wp.y;
+			pts(2,i) = wp.z;
 			i++;
 		}
 	}

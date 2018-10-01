@@ -1,0 +1,12 @@
+<launch>
+	
+	<rosparam command="load" file="$(find planning)/params/planning_params.yaml" />
+	<node pkg="tf" type="static_transform_publisher" name="map_tomap_frame" args="0 0 0 0 0 0 /map /map_frame 100"/>
+	
+	<group ns="planning">
+		<node type="planning_waypoint_provider" pkg="planning" name="planning_waypoint_provider" output="screen" />
+		<node type="spline_generator" pkg="planning" name="spline_generator" output="screen" />
+	</group>		
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find planning)/rviz/rviz_1.rviz" />
+</launch>

@@ -3,8 +3,6 @@
 #include "pkg_utils/helper_functions.h"
 #include "pkg_utils/conversions.h"
 
-#include <ros/console.h>
-
 #include <math.h>
 
 /* Storage of matrix sizes.
@@ -24,10 +22,10 @@ SplineGenerator::SplineGenerator()
 , dim_(3) 
 {
 	/* Initialize subscribers */ 
-	waypoint_sub_ = nh_.subscribe("/planning/waypoints", 1, &SplineGenerator::waypointCb, this);
+	waypoint_sub_ = nh_.subscribe("waypoints", 1, &SplineGenerator::waypointCb, this);
 
 	/* Initialize publishers */
-	spline_pub_ = nh_.advertise<snake_msgs::Spline>("/planning/path", 5);
+	spline_pub_ = nh_.advertise<snake_msgs::Spline>("path", 5);
 
 	/* Container pre-allocation ::waypointCb */
 	number_waypoints_ = 0;
@@ -42,10 +40,10 @@ SplineGenerator::waypointCb(const snake_msgs::Waypoints::ConstPtr waypoint_msg)
 {
 	/* Timing */
 	time_wp_in_ = ros::Time::now();
-	
+
 	/* Store waypoint data in-house */
 	number_waypoints_ = waypoint_msg->waypoints.size();	
-	utils::waypointsMsgToPointMatrix(*waypoint_msg, waypoints_);
+	utils::waypointsMsgToPointMatrix(waypoint_msg, waypoints_);
 
 	/* Timing */
 	time_wp_out_ = ros::Time::now();
