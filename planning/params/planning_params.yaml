@@ -1,2 +1,2 @@
 # Spline generato 
-planning/test_data_csv: "straight_waypoints_x.csv"
+planning/test_data_csv: "straight_waypoints_xyz.csv"

@@ -8,5 +8,8 @@
 		<node type="spline_generator" pkg="planning" name="spline_generator" output="screen" />
 	</group>		
 
+	<!-- Visualization -->
+	<node type="path_visualization_node" pkg="snake_viz" name="path_visualization_node" output="screen" />
+
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find planning)/rviz/rviz_1.rviz" />
 </launch>
