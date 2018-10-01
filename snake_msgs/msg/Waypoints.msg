@@ -1,4 +1,4 @@
-std_msgs/Header header
+Header header
 std_msgs/Time start
 
 snake_msgs/Waypoint[] waypoints
