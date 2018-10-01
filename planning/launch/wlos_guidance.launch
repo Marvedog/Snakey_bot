@@ -1,0 +1,9 @@
+<launch>
+	
+	<rosparam command="load" file="$(find r18dv_control_system)/params/control_params.yaml" />
+
+	<group ns="control" />
+		<node type="wlos_guidance" pkg="control_system" name="wlos_guidance" output="screen" />
+	</group>		
+
+</launch>

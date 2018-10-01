@@ -33,7 +33,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES testing_statistics helper_functions spline trajectory
+  LIBRARIES testing_statistics helper_functions spline trajectory eigen_helpers
 )
 
 include_directories(
@@ -51,6 +51,21 @@ add_library(
 	helper_functions 
 	src/helper_functions.cpp 
 	include/pkg_utils/helper_functions.h
+)
+
+# Eigen helper library
+add_library(
+	eigen_helpers 
+	src/eigen_helpers.cpp 
+	include/pkg_utils/eigen_helpers.h
+)
+target_link_libraries(
+	eigen_helpers 
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	eigen_helpers 
+	${catkin_EXPORTED_TARGETS}
 )
 
 # Create spline library	
@@ -80,7 +95,6 @@ target_link_libraries(
 	testing_statistics
 	${catkin_LIBRARIES}
 )
-
 add_dependencies(
 	testing_statistics	
 	${catkin_EXPORTED_TARGETS}
@@ -96,7 +110,6 @@ target_link_libraries(
 	trajectory
 	${catkin_LIBRARIES}
 )
-
 add_dependencies(
 	trajectory	
 	${catkin_EXPORTED_TARGETS}

@@ -86,7 +86,7 @@ WlosGuidance::WlosGuidance()
 void
 WlosGuidance::trajectoryCb(const snake_msgs::Trajectory::ConstPtr trajectory_msg)
 {
-	msgToTrajectory(*trajectory_msg, trajectory_);
+	utils::msgToTrajectory(*trajectory_msg, trajectory_);
 
 	/* Timing */
 	time_traj_input_ = ros::Time::now();

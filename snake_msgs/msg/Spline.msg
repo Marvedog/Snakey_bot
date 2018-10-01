@@ -1,3 +1,6 @@
+std_msgs/Time start
+std_msgs/Time end
+
 float64[] breaks
 std_msgs/Float64MultiArray coefs
 
