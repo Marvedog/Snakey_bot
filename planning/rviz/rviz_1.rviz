@@ -54,7 +54,7 @@ Visualization Manager:
       Marker Topic: /planning/viz/path
       Name: Path
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -84,25 +84,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 13.3041105
+      Distance: 46.8975449
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
+        X: 7.38640165
+        Y: 14.0708055
         Z: 0
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.0497961529
+      Pitch: -0.150203764
       Target Frame: map
       Value: ThirdPersonFollower (rviz)
-      Yaw: 2.91358113
+      Yaw: 3.18857861
     Saved:
       - Class: rviz/FPS
         Enable Stereo Rendering:

@@ -5,6 +5,7 @@
 
 #include <math.h>
 
+#include <iostream>
 /* Storage of matrix sizes.
 	 TODO: Create storage file for preallocated sizes! 
 */
@@ -50,8 +51,8 @@ SplineGenerator::waypointCb(const snake_msgs::Waypoints::ConstPtr waypoint_msg)
 	time_spline_in_ = time_wp_out_;
 
 	/* Compute spline */
-	spline_ = utils::Spline( waypoints_.block(0, 0, dim_-1, number_waypoints_-1)
-				 								 , utils::getChordBreaks(waypoints_.block(0, 0, dim_-1, number_waypoints_-1), false) 
+	spline_ = utils::Spline( waypoints_.block(0, 0, dim_, number_waypoints_)
+				 								 , utils::getChordBreaks(waypoints_.block(0, 0, dim_, number_waypoints_), false) 
 												 , utils::Spline::CUBIC  
 												 , false);
 

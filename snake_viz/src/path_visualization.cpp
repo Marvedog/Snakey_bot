@@ -1,11 +1,13 @@
 #include <snake_viz/path_visualization.h>
 
-#include <pkg_utils/track.h>
+#include <pkg_utils/spline.h>
 #include <pkg_utils/conversions.h>
 
 #include <geometry_msgs/Point.h>
 
 #include <Eigen/Dense>
+
+#include <ros/console.h>
 
 PathVisualization::PathVisualization() 
 {
@@ -17,11 +19,11 @@ void
 PathVisualization::pathCb(const snake_msgs::Spline::ConstPtr msg) 
 {
 	visualization_msgs::Marker marker = markerSetup();
-	utils::Track track;
-	utils::msgToSpline(*msg, track.centerline);
+	utils::Spline spline;
+	utils::msgToSpline(*msg, spline);
 
-	for (double t = 0; t < track.centerline.end(); t += 0.1f) { // NOLINT
-		Eigen::VectorXd p = track.centerline.evaluate(t, 0);
+	for (double t = 0; t < spline.end(); t += 0.1f) { // NOLINT
+		Eigen::VectorXd p = spline.evaluate(t, 0);
 
 		geometry_msgs::Point point;
 		point.x = p[0];
