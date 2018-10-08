@@ -1,92 +1,55 @@
-#ifndef WLOS_GUIDANCE
-#define WLOS_GUIDANCE
+#ifndef WLOS_GUIDANCE_H
+#define WLOS_GUIDANCE_H
 
-#include <ros/ros.h>
-#include <ros/time.h>
-
-/* Inputs */
 #include <nav_msgs/Odometry.h>
-#include <snake_msgs/Trajectory.h>
+#include <pkg_utils/spline.h>
 
-/* Waypoint LOS guiance utils */
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-#include <pkg_utils/trajectory.h>
 
-/* Outputs */
-
-
-/* WlosGuidance 
-	 ---> Functionality
-	 ------> Computes reference angles for end effector
-	 ------> Computes referene velocity for end effector
-	 ------> Computes reference pose for tail relative to end effector
-	 ---> Assumes
-	 ------> Base frame: CoM end-effector
-	 ------> Angle represenation: XYZ 
+/** 
+	* @brief WlosGuidance class computes a waypoint line-of-sight guidance
+	* vector and compute position, orientation and velocity references.
+	* @implicit Base frame: CoM end-effector (head)
+	* @implicit Angle represenation: XYZ euler (computing los frame) 
 */
 
 class WlosGuidance
 {
 	public:
 		WlosGuidance();
+		WlosGuidance(double minlookahead, double maxlookahead);
 
-		ros::Publisher desired_velocity_;
-		ros::Publisher desired_end_effector_pose_;
-		
-		double rate_;
+		void msgTo3dPose(const nav_msgs::Odometry odom);
+		Eigen::VectorXd losVector();
+		Eigen::VectorXd computeLinearReference();
+		Eigen::Quaterniond computeAngularReference();
+
+		utils::Spline trajectory; /* TODO: Add handling of speed profile */
+		Eigen::VectorXd pose;
+		Eigen::Quaterniond map_base; 
+
 	private:
-
-		/* Callbacks */
-		void trajectoryCb(const snake_msgs::Trajectory::ConstPtr trajectory_msg);
-		void odomCb(const nav_msgs::Odometry::ConstPtr odom);
-
+		
 		/* Utilities */
 		void progressPath();
-		void losVector();
-		void computeVelocityReference();
-		void computeTailReference();
 
-		/* Ros utils */
-		ros::NodeHandle nh_;
-		ros::Subscriber trajectory_sub_;
-		ros::Subscriber odom_sub_;
-
-		/* Input */
-		nav_msgs::Odometry odometry_;	
-		utils::Trajectory trajectory_;
-
-		/* trajectoryCb containers */
-		ros::Time time_traj_input_;
-		
-		/* odomCb containers */
-		Eigen::Quaterniond base_frame_quat_; 
-		ros::Time time_odom_input_;
-
-		/* progressPath containers */
-		double t_progress_;
-		Eigen::VectorXd pose_progress_;
+		double splineprogress;
 		
 		/* losVector containers */
-		double lookahead_waypoint_ = 0;
-		Eigen::VectorXd pos_lookahead_;
-		Eigen::VectorXd vlos_;
+		double wplookahead;
+		Eigen::VectorXd poslookahead;
+		Eigen::VectorXd vlos;
 	
 		/* computeVelocityReference containers */
-		double x_angle_;
-		double y_angle_;
-		double z_angle_;
-		Eigen::MatrixXd los_frame_;
-		Eigen::MatrixXd base_frame_;
-		Eigen::MatrixXd orientation_error_;
-		Eigen::Quaterniond los_frame_quat_; 
-		Eigen::Quaterniond orientation_error_quat_; 
+		double roll;
+		double pitch;
+		double yaw;
+		Eigen::Quaterniond map_vlos; 
 		
 		/* Tuning parameters */
 		double PI;
-		double min_lookahead_;
-		double max_lookahead_;
-		int joints_;
+		double minlookahead;
+		double maxlookahead;
 };
-
 #endif

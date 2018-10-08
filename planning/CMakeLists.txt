@@ -68,3 +68,16 @@ add_dependencies(
 		${PROJECT_NAME}_waypoint_provider
 		${catkin_EXPORTED_TARGETS}
 )
+# Ins mock class
+add_executable(
+		${PROJECT_NAME}_ins_mock
+		src/ins_mock_class.cpp 
+)
+target_link_libraries(
+		${PROJECT_NAME}_ins_mock
+		${catkin_LIBRARIES}
+)
+add_dependencies(
+		${PROJECT_NAME}_ins_mock
+		${catkin_EXPORTED_TARGETS}
+)

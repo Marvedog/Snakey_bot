@@ -13,6 +13,7 @@ add_message_files(
   FILES
   Spline.msg
   Trajectory.msg
+	Vlos.msg
 	Waypoint.msg
 	Waypoints.msg
 )

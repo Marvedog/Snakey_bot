@@ -1,0 +1,8 @@
+<launch>
+	<!-- temp -->
+	<node pkg="planning" name="ins_mock" type="planning_ins_mock" output="screen" />
+
+	<!-- sys -->
+	<include file="$(find planning)/launch/spline_generator.launch" />
+	<include file="$(find control_system)/launch/wlos_guidance.launch" />
+</launch>

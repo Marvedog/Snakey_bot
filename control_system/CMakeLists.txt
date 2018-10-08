@@ -36,16 +36,18 @@ install(
 
 # Wlos guidance node
 add_executable(
-	wlos_guidance	
+	wlos_guidance_node
 	src/wlos_guidance.cpp
 	src/wlos_guidance_node.cpp
+	include/control_system/wlos_guidance.h
+	include/control_system/wlos_guidance_node.h
 )
 target_link_libraries(
-	wlos_guidance 
+	wlos_guidance_node
 	${catkin_LIBRARIES}
 )
 
 add_dependencies(
-	wlos_guidance 
+	wlos_guidance_node
 	${catkin_EXPORTED_TARGETS}
 )
