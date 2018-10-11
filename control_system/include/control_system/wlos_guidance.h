@@ -24,6 +24,7 @@ class WlosGuidance
 		Eigen::VectorXd losVector();
 		Eigen::VectorXd computeLinearReference();
 		Eigen::Quaterniond computeAngularReference();
+		void getRPY(double &roll, double &pitch, double &yaw);
 
 		utils::Spline trajectory; /* TODO: Add handling of speed profile */
 		Eigen::VectorXd pose;
@@ -40,7 +41,12 @@ class WlosGuidance
 		double wplookahead;
 		Eigen::VectorXd poslookahead;
 		Eigen::VectorXd vlos;
-	
+
+		/* Unit vectors */
+		Eigen::Vector3d ux;
+		Eigen::Vector3d uy;
+		Eigen::Vector3d uz;
+
 		/* computeVelocityReference containers */
 		double roll;
 		double pitch;

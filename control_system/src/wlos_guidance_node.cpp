@@ -1,6 +1,10 @@
 #include <control_system/wlos_guidance_node.h>
 #include <pkg_utils/helper_functions.h>
 #include <pkg_utils/conversions.h>
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <geometry_msgs/Quaternion.h>
 
 /**
   * @brief Callback trajectory makes a deep copy of the input trajectory.
@@ -31,6 +35,8 @@ WlosGuidanceNode::odomCb(const nav_msgs::Odometry::ConstPtr odom_msg)
 void
 WlosGuidanceNode::timerCb(const ros::TimerEvent &e)
 {
+	
+	double tin = ros::Time::now().toSec();
 	this->vlos = this->wlosguidance.losVector();
 	this->qref = this->wlosguidance.computeAngularReference();
 	this->posref = this->wlosguidance.computeLinearReference();
@@ -38,7 +44,9 @@ WlosGuidanceNode::timerCb(const ros::TimerEvent &e)
 	this->publishVlos();
 	this->publishOdomRef();
 
+	double tout = ros::Time::now().toSec();
 	ROS_INFO_STREAM("Profiling period is " << e.profile.last_duration);
+	ROS_INFO_STREAM("RUNTIME WLOSGUIDANCE timerCb:: " << tout - tin);
 }
 
 WlosGuidanceNode::WlosGuidanceNode(const ros::NodeHandle &nh)
@@ -54,7 +62,7 @@ WlosGuidanceNode::WlosGuidanceNode(const ros::NodeHandle &nh)
 	this->trajectorysub = this->nh.subscribe("/planning/path", 1, &WlosGuidanceNode::trajectoryCb, this);
 	this->odomsub = this->nh.subscribe("/odometry", 1, &WlosGuidanceNode::odomCb, this);
 	this->vlospub = this->nh.advertise<snake_msgs::Vlos>("vlos", 1);
-	this->odomrefpub = this->nh.advertise<nav_msgs::Odometry>("/odometry_ref", 1);
+	this->odomrefpub = this->nh.advertise<nav_msgs::Odometry>("odometry_ref", 1);
 
 	while (this->wlosguidance.trajectory.m == 0)
 	{
@@ -83,10 +91,10 @@ WlosGuidanceNode::publishOdomRef()
 	this->odomrefmsg.pose.pose.position.x = this->posref(0);
 	this->odomrefmsg.pose.pose.position.y = this->posref(1);
 	this->odomrefmsg.pose.pose.position.z = this->posref(2);
-	this->odomrefmsg.pose.pose.orientation.x = this->qref.x();
-	this->odomrefmsg.pose.pose.orientation.y = this->qref.y();
-	this->odomrefmsg.pose.pose.orientation.z = this->qref.z();
-	this->odomrefmsg.pose.pose.orientation.w = this->qref.w();
+
+	geometry_msgs::Quaternion quat;	
+	tf::quaternionEigenToMsg(this->qref, quat);
+	this->odomrefmsg.pose.pose.orientation = quat;
 	this->odomrefpub.publish(odomrefmsg);
 }
 

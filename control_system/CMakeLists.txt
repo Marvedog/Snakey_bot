@@ -6,11 +6,16 @@ find_package(catkin REQUIRED COMPONENTS
   pkg_utils
   roscpp
 	snake_msgs
+	tf
 	std_msgs
 	nav_msgs
+	geometry_msgs
+	cmake_modules
+	eigen_conversions
 )
 
 # Rostest utilities, multithreading. 
+
 find_package(
 	Boost
 	REQUIRED

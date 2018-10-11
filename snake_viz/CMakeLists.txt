@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   pkg_utils
   snake_msgs
+  nav_msgs
   geometry_msgs
   visualization_msgs
 )
@@ -36,7 +37,7 @@ install(
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-#  node
+# path viz node
 add_executable(
 	path_visualization_node
 	src/path_visualization.cpp
@@ -47,5 +48,18 @@ target_link_libraries(
 )
 add_dependencies(
 	path_visualization_node
+	${catkin_EXPORTED_TARGETS}
+)
+# guidance viz node
+add_executable(
+	guidance_visualization_node
+	src/guidance_visualization.cpp
+)
+target_link_libraries(
+	guidance_visualization_node
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	guidance_visualization_node
 	${catkin_EXPORTED_TARGETS}
 )

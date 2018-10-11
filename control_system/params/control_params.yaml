@@ -1,4 +1,4 @@
 # Waypoint los guidance
-control/minlookahead: 0.2
-control/maxlookahead: 0.4
+control/minlookahead: 0.5
+control/maxlookahead: 0.7
 control/tstimer: 1.0

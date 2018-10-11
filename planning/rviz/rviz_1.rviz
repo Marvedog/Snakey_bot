@@ -57,6 +57,22 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /control/viz/vlos
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /control/viz/odometry_ref
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 100; 100; 100
@@ -84,25 +100,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 46.8975449
+      Distance: 13.8932161
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 7.38640165
-        Y: 14.0708055
-        Z: 0
+        X: 4.03267241
+        Y: -2.16918087
+        Z: -1.8371356e-08
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: -0.150203764
+      Pitch: -0.380204678
       Target Frame: map
       Value: ThirdPersonFollower (rviz)
-      Yaw: 3.18857861
+      Yaw: 3.2535975
     Saved:
       - Class: rviz/FPS
         Enable Stereo Rendering:

@@ -12,8 +12,8 @@ main(int argv, char** argc)
 
 	ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry", 1);
 
-	odom_msg.pose.pose.position.x = 1;
-	odom_msg.pose.pose.position.y = 1;
+	odom_msg.pose.pose.position.x = 5;
+	odom_msg.pose.pose.position.y = -3;
 	odom_msg.pose.pose.position.z = 1;
 	odom_msg.pose.pose.orientation.x = 0;
 	odom_msg.pose.pose.orientation.y = 0;
