@@ -33,7 +33,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers
+  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers jacobian
 )
 
 include_directories(
@@ -129,6 +129,21 @@ target_link_libraries(
 )
 add_dependencies(
 	trajectory	
+	${catkin_EXPORTED_TARGETS}
+)
+
+# Create trajectory library
+add_library(
+	jacobian
+	src/jacobian.cpp 
+	include/pkg_utils/jacobian.h
+)
+target_link_libraries(
+	jacobian
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	jacobian	
 	${catkin_EXPORTED_TARGETS}
 )
 
