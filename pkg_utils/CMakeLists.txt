@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 	message_generation
 	rostest
 	message_runtime
+	eigen_conversions
 )
 
 # Rostest utilities, multithreading. 
@@ -33,7 +34,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers jacobian
+  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers jacobian modules snake
 )
 
 include_directories(
@@ -147,6 +148,38 @@ add_dependencies(
 	${catkin_EXPORTED_TARGETS}
 )
 
+# Create trajectory library
+add_library(
+	modules
+	src/modules.cpp 
+	src/Pose3.cpp
+	include/pkg_utils/modules.h
+	include/pkg_utils/Pose3.h
+)
+target_link_libraries(
+	modules
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	modules	
+	${catkin_EXPORTED_TARGETS}
+)
+# Create trajectory library
+add_library(
+	snake
+	src/snake.cpp 
+	include/pkg_utils/snake.h
+)
+target_link_libraries(
+	snake
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	snake
+	${catkin_EXPORTED_TARGETS}
+)
+
+# Executable for verification of test and illustration
 # Executable for verification of test and illustration
 add_executable(
 	test_pub 

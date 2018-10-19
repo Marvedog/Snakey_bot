@@ -11,7 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
   FILES
-  Spline.msg
+	JointAngle.msg
+	JointAngles.msg
+	Spline.msg
   Trajectory.msg
 	Vlos.msg
 	Waypoint.msg

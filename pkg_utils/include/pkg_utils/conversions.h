@@ -110,7 +110,6 @@ namespace utils
 		int i = 0;
 		for (auto& wp: wps->waypoints)
 		{
-			ROS_INFO_STREAM("waypointMsgToPointMatrix:: i = " << i);
 			pts(0,i) = wp.x;
 			pts(1,i) = wp.y;
 			pts(2,i) = wp.z;

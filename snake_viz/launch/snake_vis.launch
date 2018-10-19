@@ -1,0 +1,6 @@
+<launch>
+
+	<rosparam command="load" file="$(find snake_viz)/params/snake.yaml" />
+	<node pkg="snake_viz" type="snake_visualization_node" name="snake_visualization_node" output="screen" />
+
+</launch>

@@ -56,3 +56,19 @@ add_dependencies(
 	wlos_guidance_node
 	${catkin_EXPORTED_TARGETS}
 )
+
+# Inverse kinematics node
+add_executable(
+	inverse_kinematics_node
+	src/inverse_kinematics.cpp
+	include/control_system/inverse_kinematics.h
+)
+target_link_libraries(
+	inverse_kinematics_node
+	${catkin_LIBRARIES}
+)
+
+add_dependencies(
+	inverse_kinematics_node
+	${catkin_EXPORTED_TARGETS}
+)

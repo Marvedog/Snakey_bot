@@ -5,7 +5,8 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   message_runtime
   roscpp
-  pkg_utils
+	tf
+	pkg_utils
   snake_msgs
   nav_msgs
   geometry_msgs
@@ -61,5 +62,18 @@ target_link_libraries(
 )
 add_dependencies(
 	guidance_visualization_node
+	${catkin_EXPORTED_TARGETS}
+)
+add_executable(
+	snake_visualization_node
+	src/snake_visualization.cpp
+	include/snake_viz/snake_visualization.h
+)
+target_link_libraries(
+	snake_visualization_node
+	${catkin_LIBRARIES}
+)
+add_dependencies(
+	snake_visualization_node
 	${catkin_EXPORTED_TARGETS}
 )
