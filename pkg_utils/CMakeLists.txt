@@ -34,7 +34,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers jacobian modules snake
+  LIBRARIES testing_statistics helper_functions spline trajectory track eigen_helpers jacobian snake
 )
 
 include_directories(
@@ -148,22 +148,22 @@ add_dependencies(
 	${catkin_EXPORTED_TARGETS}
 )
 
-# Create trajectory library
-add_library(
-	modules
-	src/modules.cpp 
-	src/Pose3.cpp
-	include/pkg_utils/modules.h
-	include/pkg_utils/Pose3.h
-)
-target_link_libraries(
-	modules
-	${catkin_LIBRARIES}
-)
-add_dependencies(
-	modules	
-	${catkin_EXPORTED_TARGETS}
-)
+## Create trajectory library
+#add_library(
+#	modules
+#	src/modules.cpp 
+#	src/Pose3.cpp
+#	include/pkg_utils/modules.h
+#	include/pkg_utils/Pose3.h
+#)
+#target_link_libraries(
+#	modules
+#	${catkin_LIBRARIES}
+#)
+#add_dependencies(
+#	modules	
+#	${catkin_EXPORTED_TARGETS}
+#)
 # Create trajectory library
 add_library(
 	snake

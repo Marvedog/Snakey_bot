@@ -18,8 +18,8 @@ class Snake
 				 , int base);
 
 		std::vector<std::string> snake_config;
-		std::vector<geometry::Pose3> joint_tf;
-		std::vector<geometry::Pose3> joint_tf_home;
+		std::vector<tf::Transform> joint_tf;
+		std::vector<tf::Transform> joint_tf_home;
 
 		void computeJointTransformations(std::vector<double> theta);
 
@@ -35,7 +35,7 @@ class Snake
 		std::vector<double> alpha;
 		std::vector<double> theta;
 
-		 T_I_base;
+		tf::Transform T_I_base;
 };
 
 #endif

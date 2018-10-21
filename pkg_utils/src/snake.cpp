@@ -53,15 +53,20 @@ Snake::Snake(  std::vector<std::string> snake_config
 	}
 
 	/// Error check base within range
+		std::cout << base << std::endl;
 	if (base < 0 || base > this->frames)
 	{
 		std::cerr << "Snake constructor:: base is out of range!" << std::endl;
 		return;
 	}
+	this->base_frame = base;
 
 	/// Pre-allocate joint transformation containers
 	this->joint_tf.resize(this->frames);
 	this->joint_tf_home.resize(this->frames);
+
+	/// Initialize base tf
+	this->joint_tf[this->base_frame] = geometry::Dhtf().tf;
 }
 
 void
@@ -70,23 +75,24 @@ Snake::computeJointTransformations(std::vector<double> theta)
 	/// Forward iteration ()
 	/// TODO: Add home transformations
 	std::cout << "her" << std::endl;
-	for (int i = this->base_frame - 1; i >= 0; i--) // +1 cus base -> base is trivial
+	for (int i = this->base_frame; i >= 0; i--)
 	{
-		geometry::Pose3 T_prev_i = geometry::DHTransform( this->d[i], this->a[i], this->alpha[i], theta[i]).pose;
-		this->joint_tf[i] = joint_tf[i-1] * T_prev_i.inverse();
+		std::cout << i << std::endl;
+		tf::Transform T_prev_i = geometry::Dhtf( this->d[i-1], this->a[i-1], this->alpha[i-1], theta[i-1]).tf;
+		std::cout << i << std::endl;
+		this->joint_tf[i-1] = joint_tf[i] * T_prev_i.inverse();
 	}
 	
 	/// Backward iteration
 	/// TODO: Add home transformations
-	for (int i = this->base_frame; i < this->frames; i++)
+	for (int i = this->base_frame; i < this->frames-1; i++)
 	{
 		std::cout << i << std::endl;
 		std::cout << "d" << d[i] << std::endl;
 		std::cout << "a" << a[i] << std::endl;
 		std::cout << "alpha" << alpha[i] << std::endl;
 		std::cout << "theta" << theta[i] << std::endl;
-		geometry::Pose3 T_prev_i = geometry::DHTransform( this->d[i], this->a[i], this->alpha[i], theta[i]).pose;
-		T_prev_i.print("------------------------------------------------------");
-		this->joint_tf[i] = joint_tf[i-1] * T_prev_i;
+		tf::Transform T_prev_i = geometry::Dhtf( this->d[i+1], this->a[i+1], this->alpha[i+1], theta[i+1]).tf;
+		this->joint_tf[i+1] = joint_tf[i] * T_prev_i;
 	}
 }

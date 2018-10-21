@@ -34,10 +34,10 @@ class SnakeViz
 		void odomCb(const nav_msgs::Odometry odom);
 
 		void jointMsgToVector(const snake_msgs::JointAngles &snake_msg);
-		void geometryPose3ToTf(const geometry::Pose3 &tf, tf::Transform &tf_ros) const;
+		//void geometryPose3ToTf(const geometry::Pose3 &tf, tf::Transform &tf_ros) const;
 
 		void pubMapBaseTransform(const nav_msgs::Odometry &odom);
-		void pubTransform(const geometry::Pose3 &tf, const std::string &s);
+		void pubTransform(const tf::Transform &tf, const std::string &s);
 
 
 		Snake snake; 

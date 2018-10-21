@@ -44,11 +44,11 @@ main(int argv, char** argc)
 	q1_msg.header.frame_id = "joint_0";
 	q1_msg.angle = 0;
 	q2_msg.header.frame_id = "joint_1";
-	q2_msg.angle = PI/8;
+	q2_msg.angle = 0;
 	q3_msg.header.frame_id = "joint_2";
-	q3_msg.angle = PI/8;
-	q4_msg.header.frame_id = "link_1";
-	q4_msg.angle = PI/8;
+	q3_msg.angle = 0;
+	q4_msg.header.frame_id = "joint_3";
+	q4_msg.angle = 0;
 	q_msg.theta.push_back(q0_msg);
 	q_msg.theta.push_back(q1_msg);
 	q_msg.theta.push_back(q2_msg);

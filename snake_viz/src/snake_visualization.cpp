@@ -54,6 +54,7 @@ SnakeViz::jointMsgToVector(const snake_msgs::JointAngles &snake_msg)
 	}
 }
 
+/*
 void 
 SnakeViz::geometryPose3ToTf(const geometry::Pose3 &tf, tf::Transform &tf_ros) const 
 {
@@ -67,6 +68,7 @@ SnakeViz::geometryPose3ToTf(const geometry::Pose3 &tf, tf::Transform &tf_ros) co
 
 	tf::poseMsgToTF(pose, tf_ros);
 }
+*/
 
 void
 SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
@@ -82,14 +84,13 @@ SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
 }
 
 void
-SnakeViz::pubTransform(const geometry::Pose3 &tf, const std::string &s)
+SnakeViz::pubTransform(const tf::Transform &tf, const std::string &s)
 {
-	tf::Transform tf_ros;
-	this->geometryPose3ToTf(tf, tf_ros);
-	bc.sendTransform( tf::StampedTransform( tf_ros
-																							, ros::Time::now()
-																							, "base_link"
-																							, s)
+	//this->geometryPose3ToTf(tf, tf_ros);
+	bc.sendTransform( tf::StampedTransform( tf
+																				, ros::Time::now()
+																				, "base_link"
+																				, s)
 	);
 }
 
@@ -146,15 +147,12 @@ main( int argc, char** argv )
 	int base;
 	nh.getParam("base", base);
 	
-	//SnakeViz snakeviz(nh, snake_config, d, a, alpha, theta, base);
+	SnakeViz snakeviz(nh, snake_config, d, a, alpha, theta, base);
   
-	geometry::Pose3 pos = geometry::DHTransform(1,1,3.14,0).pose;
-	pos.print("-------");
+	//geometry::Pose3 pos = geometry::DHTransform(1,1,3.14,0).pose;
 	
-	geometry::Pose3 pos1 = geometry::DHTransform(1,1,3.14/4,3.14/4).pose;
-	pos1.print("-------");
+	//geometry::Pose3 pos1 = geometry::DHTransform(1,1,3.14/4,3.14/4).pose;
 
-	geometry::Pose3 pos2 = geometry::DHTransform(1,1,0,3.14).pose;
-	pos2.print("-------");
-	//ros::spin();
+	//geometry::Pose3 pos2 = geometry::DHTransform(1,1,0,3.14).pose;
+	ros::spin();
 }
