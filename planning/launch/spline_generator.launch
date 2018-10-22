@@ -3,12 +3,9 @@
 	<rosparam command="load" file="$(find planning)/params/planning_params.yaml" />
 	<node pkg="tf" type="static_transform_publisher" name="map_tomap_frame" args="0 0 0 0 0 0 /map /map_frame 100"/>
 
-	<node type="planning_mock" pkg="planning" name="planning_mock" output="screen" />
-
 	<group ns="planning">
 		<node type="planning_waypoint_provider" pkg="planning" name="planning_waypoint_provider" output="screen" />
 		<node type="spline_generator" pkg="planning" name="spline_generator" output="screen" />
 	</group>		
 
-	<include file="$(find snake_viz)/launch/snake_vis.launch" />
 </launch>

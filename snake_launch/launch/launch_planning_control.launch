@@ -1,14 +1,13 @@
 <launch>
 	<!-- temp -->
-	<node pkg="planning" name="ins_mock" type="planning_ins_mock" output="screen" />
+	<node pkg="planning" name="mock" type="planning_mock" output="screen" />
 
 	<!-- sys -->
 	<include file="$(find planning)/launch/spline_generator.launch" />
 	<include file="$(find control_system)/launch/wlos_guidance.launch" />
 	
 	<!-- Vis -->
-	<node type="path_visualization_node" pkg="snake_viz" name="path_visualization_node" output="screen" />
-	<node type="guidance_visualization_node" pkg="snake_viz" name="guidance_visualization_node" output="screen" />
+	<include file="$(find snake_viz)/launch/snake_vis.launch" />
 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find planning)/rviz/rviz_1.rviz" />
 </launch>

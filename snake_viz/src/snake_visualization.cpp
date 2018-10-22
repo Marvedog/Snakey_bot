@@ -22,7 +22,8 @@ SnakeViz::SnakeViz( const ros::NodeHandle &nh
 	this->jointsub = this->nh.subscribe("joint_angles", 1, &SnakeViz::jointCb, this);
 	this->odomsub = this->nh.subscribe("odometry", 1, &SnakeViz::odomCb, this);
 
-	this->theta.resize(theta.size());
+	this->theta.resize(this->snake.getJoints());
+	this->joint_tf.resize(theta.size());
 	this->frames.resize(theta.size());
 }
 
@@ -30,12 +31,15 @@ void
 SnakeViz::jointCb(const snake_msgs::JointAngles joints) 
 {
 	this->jointMsgToVector(joints);	
-	this->snake.computeJointTransformations(this->theta);
+	this->snake.updateTransformations(this->theta);
+	
+	this->snake.getFrames(this->joint_tf, this->frames);
 
-	for (int i = 0; i < this->snake.joint_tf.size(); i++)
+	for (int i = 0; i < this->joint_tf.size()-1; i++)
 	{
-		this->pubTransform(this->snake.joint_tf[i], this->frames[i]);	
+		this->pubTransform(this->joint_tf[i], this->frames[i], this->frames[i+1]);	
 	}
+	//this->pubTransform(this->joint_tf[this->joint_tf.size()-1], this->frames[this->joint_tf.size()-1], "end_effector");	
 }
 
 void
@@ -50,25 +54,8 @@ SnakeViz::jointMsgToVector(const snake_msgs::JointAngles &snake_msg)
 	for (int i = 0; i < snake_msg.theta.size(); i++)
 	{
 		this->theta[i] = snake_msg.theta[i].angle;
-		this->frames[i] = snake_msg.theta[i].header.frame_id;
 	}
 }
-
-/*
-void 
-SnakeViz::geometryPose3ToTf(const geometry::Pose3 &tf, tf::Transform &tf_ros) const 
-{
-	geometry_msgs::Quaternion quat;
-	geometry_msgs::Pose pose;
-	pose.position.x = tf.x();
-	pose.position.y = tf.y();
-	pose.position.z = tf.z();
-	tf::quaternionEigenToMsg(tf.rot(), quat);
-	pose.orientation = quat;
-
-	tf::poseMsgToTF(pose, tf_ros);
-}
-*/
 
 void
 SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
@@ -84,13 +71,12 @@ SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
 }
 
 void
-SnakeViz::pubTransform(const tf::Transform &tf, const std::string &s)
+SnakeViz::pubTransform(const tf::Transform &tf, const std::string &me, const std::string &child)
 {
-	//this->geometryPose3ToTf(tf, tf_ros);
 	bc.sendTransform( tf::StampedTransform( tf
 																				, ros::Time::now()
-																				, "base_link"
-																				, s)
+																				, me
+																				, child)
 	);
 }
 
@@ -149,10 +135,5 @@ main( int argc, char** argv )
 	
 	SnakeViz snakeviz(nh, snake_config, d, a, alpha, theta, base);
   
-	//geometry::Pose3 pos = geometry::DHTransform(1,1,3.14,0).pose;
-	
-	//geometry::Pose3 pos1 = geometry::DHTransform(1,1,3.14/4,3.14/4).pose;
-
-	//geometry::Pose3 pos2 = geometry::DHTransform(1,1,0,3.14).pose;
 	ros::spin();
 }
