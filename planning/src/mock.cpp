@@ -39,21 +39,21 @@ main(int argv, char** argc)
 	odom_msg.pose.pose.orientation.w = 0;
 
 	// Assuming 2 joint modules 
-	q0_msg.angle = PI/4;
-	q1_msg.angle = 0;
+	q0_msg.angle = 0;
+	q1_msg.angle = PI/2;
+	q2_msg.angle = PI/2;
+	q3_msg.angle = 0;
 	/*
 	q2_msg.header.frame_id = "joint_1";
-	q2_msg.angle = 0;
 	q3_msg.header.frame_id = "joint_2";
-	q3_msg.angle = 0;
 	q4_msg.header.frame_id = "joint_3";
 	q4_msg.angle = 0;
 	*/
 	q_msg.theta.push_back(q0_msg);
 	q_msg.theta.push_back(q1_msg);
-	/*
 	q_msg.theta.push_back(q2_msg);
 	q_msg.theta.push_back(q3_msg);
+	/*
 	q_msg.theta.push_back(q4_msg);
 	*/
 
@@ -66,11 +66,11 @@ main(int argv, char** argc)
 		q_msg.theta[0].header.stamp = ros::Time::now();
 		q_msg.theta[1].header.seq++;
 		q_msg.theta[1].header.stamp = ros::Time::now();
-		/*
 		q_msg.theta[2].header.seq++;
 		q_msg.theta[2].header.stamp = ros::Time::now();
 		q_msg.theta[3].header.seq++;
 		q_msg.theta[3].header.stamp = ros::Time::now();
+		/*
 		q_msg.theta[4].header.seq++;
 		q_msg.theta[4].header.stamp = ros::Time::now();
 		*/

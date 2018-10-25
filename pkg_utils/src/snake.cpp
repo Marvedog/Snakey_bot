@@ -1,4 +1,5 @@
 #include <pkg_utils/snake.h>
+
 #include <iostream>
 #include <sstream>
 
@@ -14,9 +15,13 @@ Snake::Snake(  std::vector<std::string> snake_config
 , alpha(alpha)
 , theta(theta)
 {
-	/// Count number of frames necessary to store in memory 
+	/// -----------------------------------------------------------	
+	/// Configures the number of frames existing on the snake
+	/// -----------------------------------------------------------	
+
 	this->frames = 0;
 	this->dynamic_frames = 0;
+
 	for (auto& module: this->snake_config)		
 	{
 		if (module == eelume::joint_module)
@@ -28,18 +33,28 @@ Snake::Snake(  std::vector<std::string> snake_config
 		{
 			this->frames += eelume::L_frames;
 		}
-		else if (module == eelume::connector)
+		else if (module == eelume::end_effector_module)
 		{
-			this->frames += eelume::C_frames;
+			this->frames += eelume::EE_frames;
+			this->dynamic_frames += eelume::EE_frames;
+		}
+		else
+		{
+			std::cerr << "Snake constructor:: <" << module << "> is not a module!" << std::endl;
 		}
 	}
 
 	std::cout << "Number of frames: " << this->frames << std::endl;
-	
-	/// Error check all sizes
+
+	/// -----------------------------------------------------------	
+	/// Error check all input sizes
+	/// -----------------------------------------------------------	
+
 	if (this->d.size() != this->frames)
 	{
 		std::cerr << "Snake constructor:: d is to small!" << std::endl;
+		std::cerr << "Snake constructor:: d is: " << this->d.size() << std::endl;
+		std::cerr << "Snake constructor:: d should be: " << this->frames << std::endl;
 		return;
 	}
 	
@@ -61,7 +76,10 @@ Snake::Snake(  std::vector<std::string> snake_config
 		return;
 	}
 
+	/// -----------------------------------------------------------	
 	/// Error check base within range
+	/// -----------------------------------------------------------	
+	
 	std::cout << base << std::endl;
 	if (base < 0 || base > this->frames)
 	{
@@ -70,62 +88,115 @@ Snake::Snake(  std::vector<std::string> snake_config
 	}
 	this->base_frame = base;
 
+	/// -----------------------------------------------------------	
 	/// Pre-allocate joint transformation containers
-	this->joint_tf.resize(this->frames);
-	this->frame_class.resize(this->frames);
-	this->frame_names.resize(this->frames);
-
-	/// Initialize base tf
-	this->joint_tf[this->base_frame] = geometry::Dhtf().tf;
+	/// -----------------------------------------------------------	
 	
+	this->_T_joint.resize(this->frames);
+	this->_T_b_i.resize(this->frames);
+	this->_T_b_i_h.resize(this->frames);
+
+	/// -----------------------------------------------------------	
+	/// Initialize base tf
+	/// -----------------------------------------------------------	
+	
+	this->_T_joint[this->base_frame].tf = geometry::Dhtf().tf;
+	
+	/// -----------------------------------------------------------	
 	/// Initiate all transformations
+	/** 
+		* This part loads the initial dh parameters specified in the snake configuration
+		* file and stores all frame definitions.
+		* 
+		* It is for now assumed that there are no end-effector joints
+		* TODO: Add end-effectors
+		* TODO: Add thruster modules
+		* TODO: Add sensor modules
+		*/
+	/// -----------------------------------------------------------	
+
 	int i = 0;
-	int dynamic_f = 0;
-	int static_f = 0;
+	int dynamic_count = 0;
+	int static_count = 0;
+	
 	for (auto& module: this->snake_config)
 	{
 		if (module == eelume::joint_module)
 		{
-			this->joint_tf[i] = geometry::Dhtf(d[i], a[i], alpha[i], theta[i]).tf;
-			this->frame_names[i] = this->frameName("link_", static_f);
-			this->frame_class[i] = "static";
-			static_f++;
-			i++;
-			
-			this->joint_tf[i] = geometry::Dhtf(d[i], a[i], alpha[i], theta[i]).tf;
-			this->frame_names[i] = this->frameName("joint_", dynamic_f);
-			this->frame_class[i] = "dynamic";
-			dynamic_f++;
-			i++;
-			
-			this->joint_tf[i] = geometry::Dhtf(d[i], a[i], alpha[i], theta[i]).tf;
-			this->frame_names[i] = this->frameName("joint_", dynamic_f);
-			this->frame_class[i] = "dynamic";
-			dynamic_f++;
-			i++;
+			this->addJointModule(i, static_count, dynamic_count);
 		}
 		else if (module == eelume::link_module)
 		{ 
-			std::cout << i << std::endl;	
-			this->joint_tf[i] = geometry::Dhtf(d[i], a[i], alpha[i], theta[i]).tf;
-			this->frame_names[i] = frameName("link_", static_f);
-			this->frame_class[i] = "static";
-			static_f++;
-			i++;
+			this->addLinkModule(i, static_count);
 		}
-
+		else if (module == eelume::end_effector_module)
+		{
+			if (i == 0)
+				this->addEndEffectorModule(i, dynamic_count, true);
+			else if (i == this->frames-1) 
+				this->addEndEffectorModule(i, dynamic_count, false);
+			else
+			{
+				std::cerr << "End_effector module cannot be placed her! " << std::endl;
+				return;
+			}
+		}
+		
+		/// -----------------------------------------------------------	
 		/// Add last frame for visualization
+		/// -----------------------------------------------------------	
+		/*	
 		if (i == this->frames-1)
 		{
-			std::cout << i << std::endl;	
-			this->joint_tf[i] = geometry::Dhtf(0, 0, 0, 0).tf;
-			this->frame_names[i] = frameName("link_", static_f);
-			this->frame_class[i] = "static";
-			static_f++;
+			this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+			this->_T_joint[i].frame_id = this->frameName("link_", static_count);
+			this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+			this->_T_joint[i].type = "static";
+			
+			this->_T_b_i[i].frame_id = "base_link";
+			this->_T_b_i[i].child_id = this->frameName("link_base_", static_count);
+			
+			this->_T_b_i_h[i].frame_id = "base_link";
+			this->_T_b_i_h[i].child_id = this->frameName("link_home_", static_count);
+			static_count++;
 			i++;
 		}
+		*/
+		if (i > this->frames)
+		{
+			ROS_ERROR_STREAM("Too many modules for configuration");
+			return;
+		}
 	}
-	this->printFrames();
+	
+	/// -----------------------------------------------------------	
+	/// Set base link
+	/// -----------------------------------------------------------	
+
+	this->_T_joint[this->base_frame].frame_id = "base_link";
+	this->_T_joint[this->base_frame-1].child_id = "base_link";
+	
+	for (int i = this->base_frame-1; i >= 0; i--)
+	{
+		this->_T_joint[i].tf = this->_T_joint[i].tf.inverse();
+		std::string tmp = this->_T_joint[i].frame_id;
+		this->_T_joint[i].frame_id = this->_T_joint[i].child_id;
+		this->_T_joint[i].child_id = tmp;
+	}
+
+	/// -----------------------------------------------------------	
+	/// Init transforms
+	/// -----------------------------------------------------------	
+	
+	for(int i = 0; i < this->frames; i++)
+	{
+		this->_T_b_i[i].tf.setIdentity();
+		this->_T_b_i_h[i].tf.setIdentity();
+	}
+
+	this->updateBaseToFront();
+	this->updateBaseToRear();
+	this->printFrames(-1);
 }
 
 std::string
@@ -138,76 +209,254 @@ Snake::frameName(const std::string &type, int &i)
 	return type + tmp_s;
 }
 
-void
-Snake::computeJointTransformations(std::vector<double> theta)
-{
-	/// Forward iteration ()
-	/// TODO: Add home transformations
-	std::cout << "her" << std::endl;
-	for (int i = this->base_frame; i >= 0; i--)
-	{
-		std::cout << i << std::endl;
-		tf::Transform T_prev_i = geometry::Dhtf( this->d[i-1], this->a[i-1], this->alpha[i-1], theta[i-1]).tf;
-		std::cout << i << std::endl;
-		this->joint_tf[i-1] = joint_tf[i] * T_prev_i.inverse();
-	}
-	
-	/// Backward iteration
-	/// TODO: Add home transformations
-	for (int i = this->base_frame; i < this->frames-1; i++)
-	{
-		std::cout << i << std::endl;
-		std::cout << "d" << d[i] << std::endl;
-		std::cout << "a" << a[i] << std::endl;
-		std::cout << "alpha" << alpha[i] << std::endl;
-		std::cout << "theta" << theta[i] << std::endl;
-		tf::Transform T_prev_i = geometry::Dhtf( this->d[i+1], this->a[i+1], this->alpha[i+1], theta[i+1]).tf;
-		this->joint_tf[i+1] = joint_tf[i] * T_prev_i;
-	}
-}
-
 void 
 Snake::updateTransformations(const std::vector<double> &theta)
 {
 	int i = 0;
-	for (int j = 0; j < this->frame_class.size(); j++)
+	for (int j = 0; j < this->_T_joint.size(); j++)
 	{
-		if (this->frame_class[j] == eelume::joint)
+		if (this->_T_joint[j].type == eelume::joint)
 		{
-			this->joint_tf[j] = geometry::Dhtf(this->d[j], this->a[j], this->alpha[j], theta[i]).tf;
+			if (j < this->base_frame)
+				this->_T_joint[j].tf = geometry::Dhtf(this->d[j], this->a[j], this->alpha[j], theta[i]).tf.inverse();
+			else
+				this->_T_joint[j].tf = geometry::Dhtf(this->d[j], this->a[j], this->alpha[j], theta[i]).tf;
 			this->theta[j] = theta[i];
 			i++;
 		}
 	}
+	this->updateBaseToFront();
+	this->updateBaseToRear();
+	this->printFrames(-1);
 }
 
 void
-Snake::printFrames() const
+Snake::updateBaseToFront()
 {
-	std::cout << "----------- Frame names from front to back -----------" << std::endl;
- 	for (int i = 0; i < this->frames; i++)
- 	{
-		tf::Matrix3x3 mat = this->joint_tf[i].getBasis();
+	if (this->base_frame <= 0)
+		return;
 
-		std::cout << this->frame_names[i] << std::endl;
-		std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << std::endl;
-		std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << std::endl;
-		std::cout << mat[2][0] << " " << mat[2][1] << " " << mat[2][2] << std::endl;
+	tf::Transform tf_init;
+	tf_init.setIdentity();
+	tf_init.setOrigin(this->_T_joint[this->base_frame-1].tf.getOrigin());
+	
+	this->_T_b_i_h[this->base_frame-1].tf = tf_init;
+
+	for (int i = this->base_frame-1; i >= 0; i--)
+	{
+		/// Define translation
+		tf::Transform T_i_tr;
+		T_i_tr.setIdentity();
+		T_i_tr.setOrigin(this->_T_joint[i].tf.getOrigin());
+		
+		this->_T_b_i[i].tf = this->_T_b_i[i+1].tf * this->_T_joint[i].tf;
+		this->_T_b_i_h[i].tf = this->_T_b_i[i+1].tf * T_i_tr;
 	}
+}
+
+void
+Snake::updateBaseToRear()
+{
+	if (this->base_frame >= this->frames)
+		return;
+
+	tf::Transform tf_init( this->_T_joint[this->base_frame].tf.getBasis()
+											 , tf::Vector3(0.0,0.0,0.0)); 
+	this->_T_b_i[this->base_frame].tf = tf_init;
+
+	for (int i = this->base_frame + 1; i < this->frames; i++)
+	{
+		/// Define rotation only
+		tf::Transform T_i_rot;
+		tf::Matrix3x3 rot_i = this->_T_joint[i].tf.getBasis();
+
+		this->_T_b_i_h[i].tf = this->_T_b_i_h[i-1].tf * this->_T_joint[i-1].tf;
+		this->_T_b_i[i].tf = tf::Transform( this->_T_b_i_h[i].tf.getBasis()*rot_i
+				                              , this->_T_b_i_h[i].tf.getOrigin());
+	}
+}
+
+void
+Snake::printFrames(int viz_level) const
+{
+	if (viz_level == -1)
+		return;
+	std::cout << "----------- Frame names from base to back -----------" << std::endl; 
+
+	for (int i = this->base_frame; i < this->frames; i++)
+ 	{
+		if (viz_level == 0)
+		{
+			tf::Matrix3x3 mat = this->_T_joint[i].tf.getBasis();
+			tf::Vector3 vec = this->_T_joint[i].tf.getOrigin();
+			std::cout << "Joint transforms!" << std::endl;	
+			std::cout << "frame_id: " << this->_T_joint[i].frame_id << std::endl;
+			std::cout << "child_id: " << this->_T_joint[i].child_id << std::endl;
+			std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << " " << vec[0] << std::endl;
+			std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << " " << vec[1] << std::endl;
+			std::cout << mat[2][0] << " " << mat[2][1] << " " << mat[2][2] << " " << vec[2] << std::endl;
+		}
+
+		if (viz_level == 1)
+		{
+			tf::Matrix3x3 mat = this->_T_b_i_h[i].tf.getBasis();
+			tf::Vector3 vec = this->_T_b_i_h[i].tf.getOrigin();
+			std::cout << "Full home transforms transforms!" << std::endl;	
+			std::cout << "frame_id: " << this->_T_b_i_h[i].frame_id << std::endl;
+			std::cout << "child_id: " << this->_T_b_i_h[i].child_id << std::endl;
+			std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << " " << vec[0] << std::endl;
+			std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << " " << vec[1] << std::endl;
+			std::cout << mat[2][0] << " " << mat[2][1] << " " << mat[2][2] << " " << vec[2] << std::endl;
+		}
+	}
+	
+	std::cout << "------------------------------------------------------" << std::endl;
+	std::cout << "----------- Frame names from base to front -----------" << std::endl;
+
+ 	for (int i = 0; i < this->base_frame; i++)
+ 	{
+		if (viz_level == 0)
+		{
+			tf::Matrix3x3 mat = this->_T_joint[i].tf.getBasis();
+			tf::Vector3 vec = this->_T_joint[i].tf.getOrigin();
+			std::cout << "Joint transforms!" << std::endl;	
+			std::cout << "frame_id: " << this->_T_joint[i].frame_id << std::endl;
+			std::cout << "child_id: " << this->_T_joint[i].child_id << std::endl;
+			std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << " " << vec[0] << std::endl;
+			std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << " " << vec[1] << std::endl;
+			std::cout << mat[2][0] << " " << mat[2][1] << " " << mat[2][2] << " " << vec[2] << std::endl;
+		}	
+		
+		if (viz_level == 1)
+		{
+			tf::Matrix3x3 mat = this->_T_b_i_h[i].tf.getBasis();
+			tf::Vector3 vec = this->_T_b_i_h[i].tf.getOrigin();
+			std::cout << "Full home transforms transforms!" << std::endl;	
+			std::cout << "frame_id: " << this->_T_b_i_h[i].frame_id << std::endl;
+			std::cout << "child_id: " << this->_T_b_i_h[i].child_id << std::endl;
+			std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << " " << vec[0] << std::endl;
+			std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << " " << vec[1] << std::endl;
+			std::cout << mat[2][0] << " " << mat[2][1] << " " << mat[2][2] << " " << vec[2] << std::endl;
+		}
+	}
+	
 	std::cout << "------------------------------------------------------" << std::endl;
 }
 
-void
-Snake::getFrames(std::vector<tf::Transform> &tf, std::vector<std::string> &names) const
+void 
+Snake::getFrames(std::vector<eelume::Tf> &T_joint, std::vector<eelume::Tf> &T_b_i, std::vector<eelume::Tf> &T_b_i_h) const
 {
-	tf = this->joint_tf;
-	std::vector<std::string> tmp = this->frame_names;
-	tmp[base_frame] = "base_link";
-	names = tmp;
+	T_joint = this->_T_joint;
+	T_b_i = this->_T_b_i;
+	T_b_i_h = this->_T_b_i_h;
 }
 
 int
 Snake::getJoints() const
 {
 	return this->dynamic_frames;
+}
+
+///------------------------------------------------
+/// Initialization utilities
+///------------------------------------------------
+
+void
+Snake::addJointModule(int &i, int &static_count, int &dynamic_count)
+{
+	/// First static link of joint
+	this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+	this->_T_joint[i].frame_id = this->frameName("link_", static_count);
+	this->_T_joint[i].type = "static";
+	
+	/// Help previous frame
+	this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+	
+	this->_T_b_i[i].frame_id = "base_link";
+	this->_T_b_i[i].child_id = this->frameName("link_base_", static_count);
+	
+	this->_T_b_i_h[i].frame_id = "base_link";
+	this->_T_b_i_h[i].child_id = this->frameName("link_home_", static_count);
+
+	static_count++;
+	i++;
+
+	/// First revolute joint
+	this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+	this->_T_joint[i].frame_id = this->frameName("joint_", dynamic_count);
+	this->_T_joint[i].type = "dynamic";
+	
+	/// Help previous frame
+	this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+	
+	this->_T_b_i[i].frame_id = "base_link";
+	this->_T_b_i[i].child_id = this->frameName("joint_base_", dynamic_count);
+	
+	this->_T_b_i_h[i].frame_id = "base_link";
+	this->_T_b_i_h[i].child_id = this->frameName("joint_home_", dynamic_count);
+	
+	dynamic_count++;
+	i++;
+	
+	/// Second revolute joint
+	this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+	this->_T_joint[i].frame_id = this->frameName("joint_", dynamic_count);
+	this->_T_joint[i].type = "dynamic";
+	
+	/// Help previous frame
+	this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+			
+	this->_T_b_i[i].frame_id = "base_link";
+	this->_T_b_i[i].child_id = this->frameName("joint_base_", dynamic_count);
+	
+	this->_T_b_i_h[i].frame_id = "base_link";
+	this->_T_b_i_h[i].child_id = this->frameName("joint_home_", dynamic_count);
+	
+	dynamic_count++;
+	i++;
+}
+
+
+void
+Snake::addLinkModule(int &i, int &static_count)
+{
+	this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+	this->_T_joint[i].frame_id = this->frameName("link_", static_count);
+	this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+	this->_T_joint[i].type = "static";
+	
+	this->_T_b_i[i].frame_id = "base_link";
+	this->_T_b_i[i].child_id = this->frameName("link_base_", static_count);
+	
+	this->_T_b_i_h[i].frame_id = "base_link";
+	this->_T_b_i_h[i].child_id = this->frameName("link_home_", static_count);
+	
+	static_count++;
+	i++;
+}
+
+void
+Snake::addEndEffectorModule(int &i, int &dynamic_count, bool first_frame)
+{
+	this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
+	this->_T_joint[i].type = "dynamic";
+
+	if (first_frame)
+	{
+		this->_T_joint[i].frame_id = this->frameName("end_effector_", dynamic_count);
+	}
+	else
+	{
+		this->_T_joint[i].frame_id = this->frameName("end_effector_", dynamic_count);
+		this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
+	}
+
+	this->_T_b_i[i].frame_id = "base_link";
+	this->_T_b_i[i].child_id = this->frameName("end_effector_base_", dynamic_count);
+	
+	this->_T_b_i_h[i].frame_id = "base_link";
+	this->_T_b_i_h[i].child_id = this->frameName("end_effector_home_", dynamic_count);
+	
+	dynamic_count++;
+	i++;
 }

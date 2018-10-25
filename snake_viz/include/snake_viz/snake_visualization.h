@@ -9,6 +9,7 @@
 #include <visualization_msgs/Marker.h>
 
 #include <pkg_utils/snake.h>
+#include <pkg_utils/eelume_definitions.h>
 #include <vector>
 #include <string>
 
@@ -36,14 +37,15 @@ class SnakeViz
 		void jointMsgToVector(const snake_msgs::JointAngles &snake_msg);
 
 		void pubMapBaseTransform(const nav_msgs::Odometry &odom);
-		void pubTransform(const tf::Transform &tf, const std::string &me, const std::string &child);
-
+		void pubTransform(const eelume::Tf &tf);
 
 		Snake snake; 
+		int base;
 		std::vector<double> theta;
 
-		std::vector<tf::Transform> joint_tf;
-		std::vector<std::string> frames;
+		std::vector<eelume::Tf> T_joint;
+		std::vector<eelume::Tf> T_b_i;
+		std::vector<eelume::Tf> T_b_i_h;
 
 		ros::NodeHandle nh;
 		ros::Publisher pub;

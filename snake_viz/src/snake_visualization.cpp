@@ -18,13 +18,17 @@ SnakeViz::SnakeViz( const ros::NodeHandle &nh
 			 , theta
 			 , base )
 , nh(nh)
+, base(base)
 {
 	this->jointsub = this->nh.subscribe("joint_angles", 1, &SnakeViz::jointCb, this);
 	this->odomsub = this->nh.subscribe("odometry", 1, &SnakeViz::odomCb, this);
 
 	this->theta.resize(this->snake.getJoints());
-	this->joint_tf.resize(theta.size());
-	this->frames.resize(theta.size());
+	this->T_joint.resize(this->theta.size());
+	this->T_b_i.resize(this->theta.size());
+	this->T_b_i_h.resize(this->theta.size());
+
+	ROS_INFO_STREAM("---------- SNAKE VISUALIZATION:: Constructor initialized ----------");
 }
 
 void 
@@ -33,13 +37,14 @@ SnakeViz::jointCb(const snake_msgs::JointAngles joints)
 	this->jointMsgToVector(joints);	
 	this->snake.updateTransformations(this->theta);
 	
-	this->snake.getFrames(this->joint_tf, this->frames);
+	this->snake.getFrames(this->T_joint, this->T_b_i, this->T_b_i_h);
 
-	for (int i = 0; i < this->joint_tf.size()-1; i++)
+	for (int i = 0; i < this->T_joint.size()-1; i++)
 	{
-		this->pubTransform(this->joint_tf[i], this->frames[i], this->frames[i+1]);	
+		//this->pubTransform(this->T_joint[i]);
+		//this->pubTransform(this->T_b_i[i]);
+		this->pubTransform(this->T_b_i_h[i]);
 	}
-	//this->pubTransform(this->joint_tf[this->joint_tf.size()-1], this->frames[this->joint_tf.size()-1], "end_effector");	
 }
 
 void
@@ -62,7 +67,6 @@ SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
 {
 	tf::Transform tf_odom;
 	tf::poseMsgToTF(odom.pose.pose, tf_odom);
-	
 	this->bc.sendTransform( tf::StampedTransform( tf_odom
 																							, ros::Time::now()
 																							, "map"
@@ -71,12 +75,12 @@ SnakeViz::pubMapBaseTransform(const nav_msgs::Odometry &odom)
 }
 
 void
-SnakeViz::pubTransform(const tf::Transform &tf, const std::string &me, const std::string &child)
+SnakeViz::pubTransform(const eelume::Tf &tf)
 {
-	bc.sendTransform( tf::StampedTransform( tf
+	bc.sendTransform( tf::StampedTransform( tf.tf
 																				, ros::Time::now()
-																				, me
-																				, child)
+																				, tf.frame_id
+																				, tf.child_id)
 	);
 }
 
