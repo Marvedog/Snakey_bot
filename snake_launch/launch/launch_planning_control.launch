@@ -3,6 +3,7 @@
 	<node pkg="planning" name="mock" type="planning_mock" output="screen" />
 
 	<!-- sys -->
+	<include file="$(find snake_state)/launch/state.launch" />
 	<include file="$(find planning)/launch/spline_generator.launch" />
 	<include file="$(find control_system)/launch/wlos_guidance.launch" />
 	

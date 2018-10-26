@@ -1,0 +1,6 @@
+<launch>
+
+	<rosparam command="load" file="$(find snake_state)/params/snake.yaml" />
+	<node pkg="snake_state" type="state_machine_node" name="state_machine_node" output="screen" />
+
+</launch>
