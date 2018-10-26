@@ -158,7 +158,6 @@ State::publishFrames()
 	tf::tfMessage _Tf;
 	for (int i = 0; i < this->snake.getJoints(); i++)
 	{
-		ROS_ERROR_STREAM(i);
 		if (i != this->snake.getJoints()-1)
 			_Tf.transforms.push_back(tfStructToStampedTransform(this->T_joint[i]));
 		_Tf.transforms.push_back(tfStructToStampedTransform(this->T_b_i[i]));

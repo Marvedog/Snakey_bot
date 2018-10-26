@@ -142,26 +142,6 @@ Snake::Snake(  std::vector<std::string> snake_config
 			}
 		}
 		
-		/// -----------------------------------------------------------	
-		/// Add last frame for visualization
-		/// -----------------------------------------------------------	
-		/*	
-		if (i == this->frames-1)
-		{
-			this->_T_joint[i].tf = geometry::Dhtf(this->d[i], this->a[i], this->alpha[i], this->theta[i]).tf;
-			this->_T_joint[i].frame_id = this->frameName("link_", static_count);
-			this->_T_joint[i-1].child_id = this->_T_joint[i].frame_id;
-			this->_T_joint[i].type = "static";
-			
-			this->_T_b_i[i].frame_id = "base_link";
-			this->_T_b_i[i].child_id = this->frameName("link_base_", static_count);
-			
-			this->_T_b_i_h[i].frame_id = "base_link";
-			this->_T_b_i_h[i].child_id = this->frameName("link_home_", static_count);
-			static_count++;
-			i++;
-		}
-		*/
 		if (i > this->frames)
 		{
 			ROS_ERROR_STREAM("Too many modules for configuration");
@@ -315,7 +295,6 @@ Snake::updateBaseToRear()
 	for (int i = this->base_frame + 1; i < this->frames; i++)
 	{
 		/// Define rotation only
-		std::cout << i << std::endl;
 		tf::Transform T_i_rot;
 		tf::Matrix3x3 rot_i = this->_T_joint[i].tf.getBasis();
 
