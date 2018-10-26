@@ -91,7 +91,7 @@ Snake::Snake(  std::vector<std::string> snake_config
 	/// -----------------------------------------------------------	
 	/// Pre-allocate joint transformation containers
 	/// -----------------------------------------------------------	
-	
+
 	this->_T_joint.resize(this->frames);
 	this->_T_b_i.resize(this->frames);
 	this->_T_b_i_h.resize(this->frames);
@@ -225,7 +225,49 @@ Snake::updateTransformations(const std::vector<double> &theta)
 			i++;
 		}
 	}
-	this->updateBaseToFront();
+	
+	/// ----------------------------------------------------
+	/// Initialize base link transformations
+	/// ----------------------------------------------------
+	
+	/// ----------------------------------------------------
+	/// Add rotation only of joint base fram transform to base frame
+	/** 
+		* T_b_i is the accumulated transforms from base link to each coordinate frame
+		* with the rotation of the dynamic joints accounted for. Base to front will
+		* therefore be straight-forward, while the base to back will require adding the
+		* rotation of the next joint transformation to the current T_b_i transform.
+		*
+		* Note again that base link of T_b_i is rotated with the joint if its revolute
+		* or has a static rotation
+		*/
+	/// ----------------------------------------------------
+	
+	tf::Transform tf_init_b_i( this->_T_joint[this->base_frame].tf.getBasis()
+											 		 , tf::Vector3(0.0,0.0,0.0));
+	this->_T_b_i[this->base_frame].tf = tf_init_b_i;
+	
+	
+	/// ----------------------------------------------------
+	/// Add translation only of joint base frame transform
+	/**
+		* Only translation is added because base link is assumed static
+		* and the snake moves relative to the base. Therefore all
+		* kinematic movement is accumulated into the front and rear expressions.
+		*/
+	/// ----------------------------------------------------
+	tf::Transform tf_init_b_i_h;
+	tf_init_b_i_h.setIdentity();
+	tf_init_b_i_h.setOrigin(this->_T_joint[this->base_frame-1].tf.getOrigin());
+	//this->_T_b_i_h[this->base_frame-1].tf = tf_init_b_i_h;
+
+	
+	/// Update front starting from the frame coming before base link (again base i static)	
+	if (this->base_frame > 0)
+	{
+		this->updateBaseToFront();
+	}
+
 	this->updateBaseToRear();
 	this->printFrames(-1);
 }
@@ -233,24 +275,31 @@ Snake::updateTransformations(const std::vector<double> &theta)
 void
 Snake::updateBaseToFront()
 {
-	if (this->base_frame <= 0)
-		return;
-
-	tf::Transform tf_init;
-	tf_init.setIdentity();
-	tf_init.setOrigin(this->_T_joint[this->base_frame-1].tf.getOrigin());
-	
-	this->_T_b_i_h[this->base_frame-1].tf = tf_init;
-
 	for (int i = this->base_frame-1; i >= 0; i--)
 	{
 		/// Define translation
 		tf::Transform T_i_tr;
 		T_i_tr.setIdentity();
 		T_i_tr.setOrigin(this->_T_joint[i].tf.getOrigin());
-		
-		this->_T_b_i[i].tf = this->_T_b_i[i+1].tf * this->_T_joint[i].tf;
+	
+		/// T_b_i_h
+		/**
+		 	* We want the rotation from everything before this frame and the translation
+			* to this frame, aka the transformation upto the origin of this frame.
+			* Since we work our way backwards, the upto now is encoded in R_i,b and the translation
+			* to this frame is encoded in t_i,i+1.
+		 	* T_b,i_home = (T_i,i+1_home * T_i+1,b_home)^(-1)
+			*						 = (T_i+1,b_home)^(-1) * (T_i,i+1_home)^(-1) 
+			*/
 		this->_T_b_i_h[i].tf = this->_T_b_i[i+1].tf * T_i_tr;
+			
+		/// T_b_i
+		/**
+			* We want the rotation of the previous frames and the translation to the previous frame
+			* T_b-1,i = (T_i,i+1 * T_i+1,b)^(-1)
+			* 			  = (T_i+1,b)^(-1) * (T_i,i+1)^(-1)
+			*/
+		this->_T_b_i[i].tf = this->_T_b_i[i+1].tf * this->_T_joint[i].tf;
 	}
 }
 
@@ -258,19 +307,32 @@ void
 Snake::updateBaseToRear()
 {
 	if (this->base_frame >= this->frames)
+	{
+		std::cout << "No transformations from base to rear to consider" << std::endl;
 		return;
-
-	tf::Transform tf_init( this->_T_joint[this->base_frame].tf.getBasis()
-											 , tf::Vector3(0.0,0.0,0.0)); 
-	this->_T_b_i[this->base_frame].tf = tf_init;
+	}
 
 	for (int i = this->base_frame + 1; i < this->frames; i++)
 	{
 		/// Define rotation only
+		std::cout << i << std::endl;
 		tf::Transform T_i_rot;
 		tf::Matrix3x3 rot_i = this->_T_joint[i].tf.getBasis();
 
+		/// T_b_i_h
+		/**
+			* We want to deploy the same principle as for the base to front.
+			* The difference now is that we don't want to invert forward transformations
+			* T_b,i_home = T_b,i-1_home * T_i-1,i
+			*/
 		this->_T_b_i_h[i].tf = this->_T_b_i_h[i-1].tf * this->_T_joint[i-1].tf;
+
+		/// T_b_i
+		/**
+			* We want to rotate the current home transformation to obtain the 
+			* full transformation to this frame 
+			* T_b,i = T_b,i-1_home * T_b,i
+			*/
 		this->_T_b_i[i].tf = tf::Transform( this->_T_b_i_h[i].tf.getBasis()*rot_i
 				                              , this->_T_b_i_h[i].tf.getOrigin());
 	}

@@ -39,10 +39,10 @@ main(int argv, char** argc)
 	odom_msg.pose.pose.orientation.w = 0;
 
 	// Assuming 2 joint modules 
-	q0_msg.angle = 0;
-	q1_msg.angle = PI/2;
-	q2_msg.angle = PI/2;
-	q3_msg.angle = 0;
+	q0_msg.angle = PI/2;
+	q1_msg.angle = 0;
+	q2_msg.angle = 0;
+	q3_msg.angle = PI/2;
 	/*
 	q2_msg.header.frame_id = "joint_1";
 	q3_msg.header.frame_id = "joint_2";

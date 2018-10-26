@@ -81,23 +81,17 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
-        joint_0:
+        end_effector_base_0:
           Value: true
-        joint_1:
+        joint_base_1:
           Value: true
-        joint_home_0:
+        joint_base_2:
           Value: true
-        joint_home_1:
+        link_base_0:
           Value: true
-        link_0:
+        link_base_1:
           Value: true
-        link_2:
-          Value: true
-        link_3:
-          Value: true
-        link_home_0:
-          Value: true
-        link_home_2:
+        link_base_2:
           Value: true
         map:
           Value: true
@@ -110,6 +104,19 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
+          base_link:
+            end_effector_base_0:
+              {}
+            joint_base_1:
+              {}
+            joint_base_2:
+              {}
+            link_base_0:
+              {}
+            link_base_1:
+              {}
+            link_base_2:
+              {}
           map_frame:
             {}
       Update Interval: 0
@@ -141,25 +148,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 11.4575214
+      Distance: 3.22522855
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.96326017
-        Y: -0.897651672
-        Z: -4.95208496e-07
+        X: 6.38523054
+        Y: -2.78756666
+        Z: -7.33627076e-07
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.169795275
+      Pitch: 0.244795293
       Target Frame: map
       Value: ThirdPersonFollower (rviz)
-      Yaw: 5.0285964
+      Yaw: 3.4035902
     Saved:
       - Class: rviz/FPS
         Enable Stereo Rendering:

@@ -39,10 +39,11 @@ SnakeViz::jointCb(const snake_msgs::JointAngles joints)
 	
 	this->snake.getFrames(this->T_joint, this->T_b_i, this->T_b_i_h);
 
-	for (int i = 0; i < this->T_joint.size()-1; i++)
+	for (int i = 0; i < this->T_joint.size(); i++)
 	{
-		//this->pubTransform(this->T_joint[i]);
-		//this->pubTransform(this->T_b_i[i]);
+		if (i < this->T_joint.size()-1)
+			this->pubTransform(this->T_joint[i]);
+		this->pubTransform(this->T_b_i[i]);
 		this->pubTransform(this->T_b_i_h[i]);
 	}
 }
