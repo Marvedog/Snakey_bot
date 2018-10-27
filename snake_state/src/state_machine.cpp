@@ -49,6 +49,7 @@ class State
 		std::vector<eelume::Tf> T_joint;
 		std::vector<eelume::Tf> T_b_i;
 		std::vector<eelume::Tf> T_b_i_h;
+		std::vector<std::string> types;
 
 		tf::TransformBroadcaster bc;
 
@@ -97,6 +98,16 @@ State::State(  const ros::NodeHandle &nh
 	this->T_joint.resize(this->snake.getFrames());
 	this->T_b_i.resize(this->snake.getFrames());
 	this->T_b_i_h.resize(this->snake.getFrames());
+	this->types.resize(this->snake.getFrames());
+
+	this->theta[0] = -1;	
+	while (this->theta[0] == -1)
+		ros::spinOnce();
+
+	ROS_INFO_STREAM("STATE MACHINE:: Got first joint message");
+
+	for (int i = 0; i < this->snake.getFrames(); i++)
+		this->types[i] = this->T_joint[i].type;
 
 	ROS_INFO_STREAM("---------------- State machine construction completed ------------");
 }
@@ -108,7 +119,7 @@ State::jointCb(const snake_msgs::JointAngles joints)
 	
 	this->snake.updateTransformations(this->theta);
 	this->snake.getFrames(this->T_joint, this->T_b_i, this->T_b_i_h);
-	
+
 	this->publishFrames();
 
 	if (this->visualization)
@@ -137,9 +148,9 @@ State::publishMapBaseTransform(const nav_msgs::Odometry &odom)
 	tf::Transform tf_odom;
 	tf::poseMsgToTF(odom.pose.pose, tf_odom);
 	bc.sendTransform( tf::StampedTransform( tf_odom
-																							, ros::Time::now()
-																							, "map"
-																							, "base_link")
+																			  , ros::Time::now()
+																				, "map"
+																				, "base_link")
 	);
 }
 
@@ -165,8 +176,11 @@ State::publishFrames()
 	snake_msgs::Transforms _Tf;
 	_Tf.T_base = Tf_base;
 	_Tf.T_home = Tf_home;
+	_Tf.type = this->types;
 	_Tf.base_frame = this->base_frame;
 	_Tf.joints = this->snake.getFrames();
+	_Tf.dynamic_frames_front = this->snake.getDynamicFramesFront();
+	_Tf.dynamic_frames_rear = this->snake.getDynamicFramesRear();
 	this->transformpub.publish(_Tf);
 }
 

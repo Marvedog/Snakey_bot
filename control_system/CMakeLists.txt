@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 	nav_msgs
 	geometry_msgs
 	cmake_modules
+	tf_conversions
 	eigen_conversions
 )
 
@@ -60,8 +61,7 @@ add_dependencies(
 # Inverse kinematics node
 add_executable(
 	inverse_kinematics_node
-	src/inverse_kinematics.cpp
-	include/control_system/inverse_kinematics.h
+	src/IK.cpp
 )
 target_link_libraries(
 	inverse_kinematics_node

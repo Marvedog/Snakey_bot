@@ -148,7 +148,30 @@ Snake::Snake(  std::vector<std::string> snake_config
 			return;
 		}
 	}
+
+	/// -----------------------------------------------------------	
+	/// Dynamic joint distribution
+	/// -----------------------------------------------------------	
+	this->dynamic_frames_front = 0;
+	this->dynamic_frames_rear = 0;
+	for (int i = 0; i < this->frames; i++)
+	{
+		if (i < this->base_frame && this->_T_joint[i].type == eelume::joint)
+			this->dynamic_frames_front++;
+		if (i > this->base_frame && this->_T_joint[i].type == eelume::joint)
+			this->dynamic_frames_rear++;
+	}
 	
+	if (this->dynamic_frames_front + this->dynamic_frames_rear != this->dynamic_frames)
+	{
+		std::cerr << "Sum of dynamic frames front and rear doesn't match all dynamic frames" << std::endl;
+		std::cerr << "Dynamic frames front: " << this->dynamic_frames_front << std::endl;
+		std::cerr << "Dynamic frames rear: " << this->dynamic_frames_rear << std::endl;
+		std::cerr << "Dynamic frames total: " << this->dynamic_frames << std::endl;
+		return;
+	}	
+
+
 	/// -----------------------------------------------------------	
 	/// Set base link
 	/// -----------------------------------------------------------	
@@ -402,6 +425,18 @@ int
 Snake::getFrames() const
 {
 	return this->frames;
+}
+
+int
+Snake::getDynamicFramesFront() const
+{
+	return this->dynamic_frames_front;
+}
+
+int
+Snake::getDynamicFramesRear() const
+{
+	return this->dynamic_frames_rear;
 }
 
 ///------------------------------------------------

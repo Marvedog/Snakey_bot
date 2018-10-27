@@ -45,8 +45,8 @@ WlosGuidanceNode::timerCb(const ros::TimerEvent &e)
 	this->publishOdomRef();
 
 	double tout = ros::Time::now().toSec();
-	ROS_INFO_STREAM("Profiling period is " << e.profile.last_duration);
-	ROS_INFO_STREAM("RUNTIME WLOSGUIDANCE timerCb:: " << tout - tin);
+	ROS_INFO_STREAM("WLOSGUIDANCE:: Profiling period is " << e.profile.last_duration);
+	ROS_INFO_STREAM("WLOSGUIDANCE:: Runtime:: " << tout - tin);
 }
 
 WlosGuidanceNode::WlosGuidanceNode(const ros::NodeHandle &nh)
@@ -101,7 +101,7 @@ WlosGuidanceNode::publishOdomRef()
 int 
 main(int argc, char **argv) 
 {
-	ros::init(argc, argv, "los_guidance");
+	ros::init(argc, argv, "wlos_guidance");
 	ros::NodeHandle nh;
 	WlosGuidanceNode wlos_guidance_node(nh);
 	ROS_INFO_STREAM("Initialized wlos guidance node");

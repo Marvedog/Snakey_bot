@@ -1,0 +1,5 @@
+# Navigation
+odom_topic: /odometry
+
+# State Machine
+kinematics_topic: /kinematics

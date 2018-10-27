@@ -3,5 +3,6 @@
 
 	<group ns="control" >
 		<node type="wlos_guidance_node" pkg="control_system" name="wlos_guidance_node" output="screen" />
+		<node type="inverse_kinematics_node" pkg="control_system" name="inverse_kinematics_node" output="screen" />
 	</group>		
 </launch>

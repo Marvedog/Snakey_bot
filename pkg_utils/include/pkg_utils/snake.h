@@ -41,6 +41,8 @@ class Snake
 		/// Deep copy of all dynamic joint data theta
 		int getJoints() const;
 		int getFrames() const;
+		int getDynamicFramesFront() const;
+		int getDynamicFramesRear() const;
 
 	private:
 	
@@ -77,6 +79,10 @@ class Snake
 		int base_frame;
 		int frames;	
 		int dynamic_frames;
+
+		/// Nice to have utilities for other data structures
+		int dynamic_frames_front;
+		int dynamic_frames_rear;
 
 		/// Dh convention parameters
 		std::vector<double> d;
