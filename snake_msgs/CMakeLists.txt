@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_runtime
   std_msgs
+	tf
 )
 
 add_message_files(
@@ -15,6 +16,7 @@ add_message_files(
 	JointAngles.msg
 	Spline.msg
   Trajectory.msg
+	Transforms.msg
 	Vlos.msg
 	Waypoint.msg
 	Waypoints.msg
@@ -22,7 +24,8 @@ add_message_files(
 
 generate_messages(
    DEPENDENCIES
-   std_msgs    
+   std_msgs
+	 tf 
 )
 
 catkin_package()

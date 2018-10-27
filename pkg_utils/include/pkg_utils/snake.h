@@ -40,6 +40,7 @@ class Snake
 		
 		/// Deep copy of all dynamic joint data theta
 		int getJoints() const;
+		int getFrames() const;
 
 	private:
 	

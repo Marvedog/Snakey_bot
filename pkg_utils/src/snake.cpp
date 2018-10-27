@@ -237,8 +237,8 @@ Snake::updateTransformations(const std::vector<double> &theta)
 		*/
 	/// ----------------------------------------------------
 	tf::Transform tf_init_b_i_h;
-	tf_init_b_i_h.setIdentity();
-	tf_init_b_i_h.setOrigin(this->_T_joint[this->base_frame-1].tf.getOrigin());
+	tf_init_b_i_h.setBasis(this->_T_joint[this->base_frame].tf.getBasis());
+	//tf_init_b_i_h.setOrigin(this->_T_joint[this->base_frame-1].tf.getOrigin());
 	//this->_T_b_i_h[this->base_frame-1].tf = tf_init_b_i_h;
 
 	
@@ -396,6 +396,12 @@ int
 Snake::getJoints() const
 {
 	return this->dynamic_frames;
+}
+
+int
+Snake::getFrames() const
+{
+	return this->frames;
 }
 
 ///------------------------------------------------

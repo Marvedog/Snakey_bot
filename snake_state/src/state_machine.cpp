@@ -9,6 +9,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <snake_msgs/JointAngles.h>
+#include <snake_msgs/Transforms.h>
 
 #include <pkg_utils/snake.h>
 #include <pkg_utils/eelume_definitions.h>
@@ -90,12 +91,12 @@ State::State(  const ros::NodeHandle &nh
 
 	this->jointsub = this->nh.subscribe(joint_topic, 1, &State::jointCb, this);
 	this->odomsub = this->nh.subscribe(odom_topic, 1, &State::odomCb, this);
-	this->transformpub = this->nh.advertise<tf::tfMessage>(transform_topic, 1);
+	this->transformpub = this->nh.advertise<snake_msgs::Transforms>(transform_topic, 1);
 
 	this->theta.resize(this->snake.getJoints());
-	this->T_joint.resize(this->snake.getJoints());
-	this->T_b_i.resize(this->snake.getJoints());
-	this->T_b_i_h.resize(this->snake.getJoints());
+	this->T_joint.resize(this->snake.getFrames());
+	this->T_b_i.resize(this->snake.getFrames());
+	this->T_b_i_h.resize(this->snake.getFrames());
 
 	ROS_INFO_STREAM("---------------- State machine construction completed ------------");
 }
@@ -155,14 +156,17 @@ State::publishTransform(const eelume::Tf &tf)
 void
 State::publishFrames()
 {
-	tf::tfMessage _Tf;
-	for (int i = 0; i < this->snake.getJoints(); i++)
+	tf::tfMessage Tf_home, Tf_base;
+	for (int i = 0; i < this->snake.getFrames(); i++)
 	{
-		if (i != this->snake.getJoints()-1)
-			_Tf.transforms.push_back(tfStructToStampedTransform(this->T_joint[i]));
-		_Tf.transforms.push_back(tfStructToStampedTransform(this->T_b_i[i]));
-		_Tf.transforms.push_back(tfStructToStampedTransform(this->T_b_i_h[i]));
+		Tf_base.transforms.push_back(tfStructToStampedTransform(this->T_b_i[i]));
+		Tf_home.transforms.push_back(tfStructToStampedTransform(this->T_b_i_h[i]));
 	}
+	snake_msgs::Transforms _Tf;
+	_Tf.T_base = Tf_base;
+	_Tf.T_home = Tf_home;
+	_Tf.base_frame = this->base_frame;
+	_Tf.joints = this->snake.getFrames();
 	this->transformpub.publish(_Tf);
 }
 
