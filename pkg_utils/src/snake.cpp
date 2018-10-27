@@ -259,7 +259,7 @@ Snake::updateBaseToFront()
 	{
 		/// Define translation
 		tf::Transform T_i_tr;
-		T_i_tr.setIdentity();
+		T_i_tr.setBasis(geometry::Dhtf(0, 0, this->alpha[i], 0).tf.inverse().getBasis());
 		T_i_tr.setOrigin(this->_T_joint[i].tf.getOrigin());
 	
 		/// T_b_i_h
@@ -279,7 +279,7 @@ Snake::updateBaseToFront()
 			* T_b-1,i = (T_i,i+1 * T_i+1,b)^(-1)
 			* 			  = (T_i+1,b)^(-1) * (T_i,i+1)^(-1)
 			*/
-		this->_T_b_i[i].tf = this->_T_b_i[i+1].tf * this->_T_joint[i].tf;
+		this->_T_b_i[i].tf = this->_T_b_i_h[i].tf * geometry::Dhtf(0, 0, 0, this->theta[i]).tf.inverse();
 	}
 }
 
@@ -296,7 +296,7 @@ Snake::updateBaseToRear()
 	{
 		/// Define rotation only
 		tf::Transform T_i_rot;
-		tf::Matrix3x3 rot_i = this->_T_joint[i].tf.getBasis();
+		tf::Matrix3x3 rot_i = geometry::Dhtf(0, 0, 0, this->theta[i]).tf.getBasis();
 
 		/// T_b_i_h
 		/**
