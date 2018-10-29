@@ -40,9 +40,9 @@ class IK
 		/**
 			* Assumes ordered input list of transformations
 			*/
-		void computeGeometricJacobians();
-		void computeAdjoint(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad);
-		void computeAdjointInverse(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad);
+		void geometricJacobians();
+		void adjoint(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad);
+		void adjointInverse(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad);
 		Eigen::Matrix3d skew3d(const Eigen::Vector3d &p);
 
 		Eigen::Matrix3d tfMatrix3x3ToEigen(const tf::Matrix3x3 &mat);
@@ -92,17 +92,35 @@ IK::IK(const ros::NodeHandle &nh)
 
 	this->odomsub = this->nh.subscribe(odom_topic, 1, &IK::odomCb, this);	
 	this->kinematicssub = this->nh.subscribe(kinematics_topic, 1, &IK::kinematicsCb, this);	
-	
+
+	/// Wait for number of frames and base frame
 	while (this->base_frame == -1)
 		ros::spinOnce();
 	ROS_INFO_STREAM("IK:: got first kinematics message");
-
-	this->nh.getParam("inverse_kinematics_ts", this->tstimer);
-	this->timer = this->nh.createTimer(ros::Duration(this->tstimer), &IK::timerCb, this);
 	
+
+	/// Preallocate containers
+	this->T_base.resize(this->joints);
+	this->T_home.resize(this->joints);
+
+	/// Define body twist
+	this->X_z = Eigen::VectorXd::Zero(6);
+	this->X_z(5) = 1;
+
+	/// Initialize geometric jacobians
+	if (this->dynamic_frames_front -1 > 0)
+		this->J_g_f = Eigen::MatrixXd::Zero(6, 6 + this->dynamic_frames_front - 1);
+
+	if (this->dynamic_frames_rear -1 > 0)
+		this->J_g_r = Eigen::MatrixXd::Zero(6, 6 + this->dynamic_frames_rear - 1);
+
 	this->nh.getParam("inverse_kinematics_debug", this->debug);
 	if (this->debug)
 		std::cout << "Debug mode on" << std::endl;
+
+	/// Initialize timer
+	this->nh.getParam("inverse_kinematics_ts", this->tstimer);
+	this->timer = this->nh.createTimer(ros::Duration(this->tstimer), &IK::timerCb, this);
 }
 
 void 
@@ -115,36 +133,41 @@ IK::odomCb(const nav_msgs::Odometry &odom)
 void 
 IK::kinematicsCb(const snake_msgs::Transforms &tf)
 {
-	this->joints = tf.joints;
-	this->base_frame = tf.base_frame;
-	for (int i = 0; i < this->joints; i++)
+	if (this->base_frame != -1)
 	{
-		/// Geometry msg to tf
-		tf::Transform _base, _home;
-		tf::transformMsgToTF(tf.T_home.transforms[i].transform, _home);
-		tf::transformMsgToTF(tf.T_base.transforms[i].transform, _base);
+		for (int i = 0; i < this->joints; i++)
+		{
+			/// Geometry msg to tf
+			tf::Transform _base, _home;
+			tf::transformMsgToTF(tf.T_home.transforms[i].transform, _home);
+			tf::transformMsgToTF(tf.T_base.transforms[i].transform, _base);
 
-		/// Tf to eigen
-		tf::vectorTFToEigen(_home.getOrigin(), this->T_home[i].vec);
-		tf::vectorTFToEigen(_base.getOrigin(), this->T_base[i].vec);
-		tf::matrixTFToEigen(_home.getBasis(), this->T_home[i].mat);
-		tf::matrixTFToEigen(_base.getBasis(), this->T_base[i].mat);
+			/// Tf to eigen
+			tf::vectorTFToEigen(_home.getOrigin(), this->T_home[i].vec);
+			tf::vectorTFToEigen(_base.getOrigin(), this->T_base[i].vec);
+			tf::matrixTFToEigen(_home.getBasis(), this->T_home[i].mat);
+			tf::matrixTFToEigen(_base.getBasis(), this->T_base[i].mat);
 
-		/// Store frame id's
-		this->T_home[i].frame_id = tf.T_home.transforms[i].header.frame_id;
-		this->T_base[i].frame_id = tf.T_base.transforms[i].header.frame_id;
-		this->T_home[i].child_id = tf.T_home.transforms[i].child_frame_id;
-		this->T_base[i].child_id = tf.T_base.transforms[i].child_frame_id;
+			/// Store frame id's
+			this->T_home[i].frame_id = tf.T_home.transforms[i].header.frame_id;
+			this->T_base[i].frame_id = tf.T_base.transforms[i].header.frame_id;
+			this->T_home[i].child_id = tf.T_home.transforms[i].child_frame_id;
+			this->T_base[i].child_id = tf.T_base.transforms[i].child_frame_id;
 
-		/// Store type
-		this->T_home[i].type = tf.type[i];
-		this->T_base[i].type = tf.type[i];
+			/// Store type
+			this->T_home[i].type = tf.type[i];
+			this->T_base[i].type = tf.type[i];
+		}
 
+		this->kinematicsstamp = ros::Time::now();
+	}
+	else
+	{
+		this->joints = tf.joints;
+		this->base_frame = tf.base_frame;
 		this->dynamic_frames_front = tf.dynamic_frames_front;
 		this->dynamic_frames_rear = tf.dynamic_frames_rear;
 	}
-
-	this->kinematicsstamp = ros::Time::now();
 }
 
 void 
@@ -153,7 +176,7 @@ IK::timerCb(const ros::TimerEvent &e)
 	double tin = ros::Time::now().toSec();
 	
 	/// Geometry
-	this->computeGeometricJacobians();
+	this->geometricJacobians();
 	
 	/// TODO: Task handling
 
@@ -164,44 +187,50 @@ IK::timerCb(const ros::TimerEvent &e)
 }
 
 void
-IK::computeGeometricJacobians()
+IK::geometricJacobians()
 {
 	///-----------------------------------------------------
 	/// Front geometric jacobian
 	///-----------------------------------------------------
 	
 	/// Jacobian from base link to front ee
-	Eigen::MatrixXd J_I_f = Eigen::MatrixXd::Zero(6, this->dynamic_frames_front-1); 
-
-	/// Loop over home transformations
-	int j = 0;
-	for (int i = this->base_frame; i > 0; i--)
+	if (this->dynamic_frames_front-1 > 0)
 	{
+		Eigen::MatrixXd J_I_f = Eigen::MatrixXd::Zero(6, this->dynamic_frames_front-1); 
 
-		/// Add to 
-		if (this->T_home[i].type == eelume::joint)
+		std::cout << this->dynamic_frames_front << std::endl;
+		/// Loop over home transformations
+		int j = 0;
+		for (int i = this->base_frame; i > 0; i--)
 		{
-			Eigen::Matrix<double, 6, 6> ad;
-			this->computeAdjoint(this->T_home[i].mat, this->T_home[i].vec, ad);
-			J_I_f.block(j,0,6,1) = 	ad*this->X_z;
+
+			/// Add to 
+			if (this->T_home[i].type == eelume::joint)
+			{
+				Eigen::Matrix<double, 6, 6> ad;
+				this->adjoint(this->T_home[i].mat, this->T_home[i].vec, ad);
+				J_I_f.block(0,j,6,1) = 	ad*this->X_z;
+				j++;
+			}
+
 		}
 
-	}
+		if (this->debug)
+		{
+			std::cout << "IK:: Manipulator Jacobian front" << std::endl;
+			std::cout << J_I_f << std::endl;
+		}
 
-	if (this->debug)
-	{
-		std::cout << "IK:: Manipulator Jacobian front" << std::endl;
-		std::cout << J_I_f << std::endl;
-	}
-
-	Eigen::Matrix<double, 6, 6> ad_inv_f;
-	this->computeAdjointInverse(this->T_home[0].mat, this->T_home[0].vec, ad_inv_f);
-	this->J_g_f << ad_inv_f, ad_inv_f*J_I_f;
-	
-	if (this->debug)
-	{
-		std::cout << "IK:: Geometric Jacobian front" << std::endl;
-		std::cout << J_g_f << std::endl;
+		Eigen::Matrix<double, 6, 6> ad_inv_f;
+		this->adjointInverse(this->T_home[0].mat, this->T_home[0].vec, ad_inv_f);
+		this->J_g_f.block(0,0,6,6) =  ad_inv_f;
+		this->J_g_f.block(0,6,6,this->dynamic_frames_front-1) = ad_inv_f*J_I_f;
+		
+		if (this->debug)
+		{
+			std::cout << "IK:: Geometric Jacobian front" << std::endl;
+			std::cout << J_g_f << std::endl;
+		}
 	}
 
 	///-----------------------------------------------------
@@ -209,35 +238,41 @@ IK::computeGeometricJacobians()
 	///-----------------------------------------------------
 	
 	/// Jacobian from base link to rear ee
-	Eigen::MatrixXd J_I_r = Eigen::MatrixXd::Zero(6, this->dynamic_frames_rear-1);
-	
-	/// Loop over home transformations
-	j = 0;
-	for (int i = this->base_frame; i < this->joints-1; i++)
+	if (this->dynamic_frames_rear-1 > 0)
 	{
-		/// Add to 
-		if (this->T_home[i].type == eelume::joint)
+		Eigen::MatrixXd J_I_r = Eigen::MatrixXd::Zero(6, this->dynamic_frames_rear-1);
+		
+		/// Loop over home transformations
+		int j = 0;
+		for (int i = this->base_frame; i < this->joints-1; i++)
 		{
-			Eigen::Matrix<double, 6, 6> ad;
-			this->computeAdjoint(this->T_home[i].mat, this->T_home[i].vec, ad);
-			J_I_r.block(j,0,6,1) = 	ad*this->X_z;
+			/// Add to 
+			if (this->T_home[i].type == eelume::joint)
+			{
+				Eigen::Matrix<double, 6, 6> ad;
+				this->adjoint(this->T_home[i].mat, this->T_home[i].vec, ad);
+				J_I_r.block(0,j,6,1) = 	ad*this->X_z;
+				j++;
+			}
 		}
-	}
-	
-	if (this->debug)
-	{
-		std::cout << "IK:: Manipulator Jacobian rear" << std::endl;
-		std::cout << J_I_f << std::endl;
-	}
-	
-	Eigen::Matrix<double, 6, 6> ad_inv_r;
-	this->computeAdjointInverse(this->T_home[this->joints-1].mat, this->T_home[this->joints-1].vec, ad_inv_r);
-	this->J_g_r << ad_inv_r, ad_inv_r*J_I_f;
-	
-	if (this->debug)
-	{
-		std::cout << "IK:: Geometric Jacobian rear" << std::endl;
-		std::cout << J_g_r << std::endl;
+		
+		if (this->debug)
+		{
+			std::cout << "IK:: Manipulator Jacobian rear" << std::endl;
+			std::cout << J_I_r << std::endl;
+		}
+		
+		Eigen::Matrix<double, 6, 6> ad_inv_r;
+		this->adjointInverse(this->T_home[this->joints-1].mat, this->T_home[this->joints-1].vec, ad_inv_r);
+
+		this->J_g_r.block(0,0,6,6) =  ad_inv_r;
+		this->J_g_r.block(0,6,6,this->dynamic_frames_rear-1) = ad_inv_r*J_I_r;
+		
+		if (this->debug)
+		{
+			std::cout << "IK:: Geometric Jacobian rear" << std::endl;
+			std::cout << this->J_g_r << std::endl;
+		}
 	}
 }
 
@@ -247,7 +282,7 @@ IK::computeGeometricJacobians()
 ///-----------------------------------------------------
 
 void
-IK::computeAdjoint(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad)
+IK::adjoint(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad)
 {
 	Eigen::Matrix3d skew = this->skew3d(vec);
 	ad << rot, skew*rot,
@@ -255,7 +290,7 @@ IK::computeAdjoint(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen
 }
 
 void
-IK::computeAdjointInverse(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad)
+IK::adjointInverse(const Eigen::Matrix3d &rot, const Eigen::Vector3d &vec, Eigen::Matrix<double, 6,6> &ad)
 {
 	Eigen::Matrix3d skew = this->skew3d(vec);
 	ad << rot.transpose(), -rot.transpose()*skew,
