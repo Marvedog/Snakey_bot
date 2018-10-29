@@ -14,6 +14,7 @@ add_message_files(
   FILES
 	JointAngle.msg
 	JointAngles.msg
+	Shape.msg
 	Spline.msg
   Trajectory.msg
 	Transforms.msg

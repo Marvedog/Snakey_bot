@@ -1,6 +1,8 @@
 # Waypoint los guidance
+control/cf: 0.3
+
 control/inverse_kinematics_ts: 1.0
-control/inverse_kinematics_debug: true
+control/inverse_kinematics_debug: false
 
 control/minlookahead: 0.5
 control/maxlookahead: 0.7

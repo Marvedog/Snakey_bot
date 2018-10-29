@@ -72,3 +72,17 @@ add_dependencies(
 	inverse_kinematics_node
 	${catkin_EXPORTED_TARGETS}
 )
+# Inverse kinematics node
+add_executable(
+	shape_controller_node
+	src/configuration_control.cpp
+)
+target_link_libraries(
+	shape_controller_node
+	${catkin_LIBRARIES}
+)
+
+add_dependencies(
+	shape_controller_node
+	${catkin_EXPORTED_TARGETS}
+)
